@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>国家经营者 — EJU经济模拟</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --card-bg: #21262d;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', 'Noto Sans SC', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ===== TITLE SCREEN ===== */
+  #screen-title {
+    width: 100%; min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #0d1117 0%, #1a2744 100%);
+    text-align: center; padding: 40px 20px;
+  }
+  #screen-title .logo { font-size: 64px; margin-bottom: 16px; }
+  #screen-title h1 { font-size: 2.4em; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+  #screen-title .subtitle { color: var(--muted); font-size: 1.1em; margin-bottom: 8px; }
+  #screen-title .eju-tag {
+    background: #1f4788; color: #79c0ff; 
+    border-radius: 20px; padding: 4px 16px; font-size: 0.9em;
+    display: inline-block; margin-bottom: 32px;
+  }
+  #screen-title .desc {
+    max-width: 520px; line-height: 1.8; color: var(--muted);
+    margin-bottom: 40px; font-size: 1em;
+  }
+
+  /* ===== DIFFICULTY SELECT ===== */
+  .diff-grid { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-bottom: 32px; }
+  .diff-card {
+    background: var(--card-bg); border: 2px solid var(--border);
+    border-radius: 12px; padding: 20px 28px; cursor: pointer;
+    transition: all 0.2s; text-align: center; min-width: 130px;
+  }
+  .diff-card:hover, .diff-card.selected { border-color: var(--accent); background: #1c2a4a; }
+  .diff-card .diff-icon { font-size: 28px; margin-bottom: 8px; }
+  .diff-card .diff-name { font-weight: 600; margin-bottom: 4px; }
+  .diff-card .diff-desc { color: var(--muted); font-size: 0.82em; }
+
+  /* ===== MAIN GAME SCREEN ===== */
+  #screen-game {
+    display: none; width: 100%; max-width: 900px;
+    padding: 20px; flex-direction: column; gap: 16px;
+  }
+
+  /* Header */
+  .game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 20px;
+  }
+  .game-header .title-area h2 { font-size: 1.1em; color: var(--accent); }
+  .game-header .title-area .year-text { font-size: 0.85em; color: var(--muted); margin-top: 2px; }
+  .year-indicator { display: flex; gap: 8px; }
+  .year-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--border); display: flex; align-items: center; justify-content: center;
+    font-size: 0.75em; font-weight: 600; color: var(--muted); transition: all 0.3s;
+  }
+  .year-dot.done { background: var(--green); color: #fff; }
+  .year-dot.current { background: var(--accent); color: #fff; box-shadow: 0 0 12px var(--accent); }
+
+  /* Stats Dashboard */
+  .stats-panel {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 20px;
+  }
+  .stats-panel h3 { font-size: 0.9em; color: var(--muted); margin-bottom: 14px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat-item { display: flex; flex-direction: column; gap: 4px; }
+  .stat-label { display: flex; justify-content: space-between; align-items: center; }
+  .stat-name { font-size: 0.88em; color: var(--text); display: flex; align-items: center; gap: 6px; }
+  .stat-val { font-size: 0.88em; font-weight: 700; }
+  .stat-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; position: relative; }
+  .stat-fill { height: 100%; border-radius: 4px; transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+  .stat-delta { font-size: 0.78em; text-align: right; height: 16px; transition: opacity 0.5s; }
+  .delta-pos { color: var(--green); }
+  .delta-neg { color: var(--red); }
+  .delta-neutral { color: var(--muted); }
+
+  /* News / Event Card */
+  .news-card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+    border-left: 4px solid var(--accent);
+  }
+  .news-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .news-header .news-icon { font-size: 1.6em; }
+  .news-header .news-title { font-size: 1em; font-weight: 600; color: var(--accent); }
+  .news-body { line-height: 1.75; color: var(--text); font-size: 0.95em; margin-bottom: 12px; }
+  .news-impact {
+    background: #1a1e26; border-radius: 8px; padding: 10px 14px;
+    font-size: 0.85em; color: var(--muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .news-impact .impact-label { color: var(--yellow); font-weight: 600; }
+
+  /* Policy / Response Section */
+  .choice-section { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .choice-section h3 { font-size: 0.9em; color: var(--muted); margin-bottom: 14px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .choice-grid { display: flex; flex-direction: column; gap: 10px; }
+  
+  .choice-card {
+    background: var(--card-bg); border: 2px solid var(--border);
+    border-radius: 10px; padding: 14px 16px; cursor: pointer;
+    transition: all 0.2s; position: relative; overflow: hidden;
+  }
+  .choice-card:hover { border-color: var(--accent); background: #1c2a4a; transform: translateX(4px); }
+  .choice-card.selected { border-color: var(--accent); background: #162032; }
+  .choice-card .choice-letter {
+    display: inline-block; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--border); color: var(--muted); text-align: center; line-height: 26px;
+    font-size: 0.8em; font-weight: 700; margin-right: 10px; flex-shrink: 0;
+  }
+  .choice-card.selected .choice-letter { background: var(--accent); color: #fff; }
+  .choice-card .choice-top { display: flex; align-items: center; }
+  .choice-card .choice-name { font-weight: 600; font-size: 0.95em; }
+  .choice-card .choice-effects {
+    margin-top: 8px; margin-left: 36px;
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .effect-tag {
+    font-size: 0.78em; padding: 2px 8px; border-radius: 12px;
+    background: #1a1e26;
+  }
+  .effect-pos { color: var(--green); border: 1px solid #2a4a2a; }
+  .effect-neg { color: var(--red); border: 1px solid #4a2020; }
+  .effect-neut { color: var(--yellow); border: 1px solid #4a3a00; }
+  .choice-card .knowledge-tag {
+    margin-top: 8px; margin-left: 36px;
+    font-size: 0.78em; color: var(--muted);
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  /* Confirm Button */
+  .confirm-btn {
+    background: var(--accent); color: #fff; border: none;
+    border-radius: 10px; padding: 14px 32px; font-size: 1em; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; width: 100%; margin-top: 4px;
+    letter-spacing: 0.05em;
+  }
+  .confirm-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+  .confirm-btn:not(:disabled):hover { background: #79c0ff; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(88,166,255,0.3); }
+
+  /* Knowledge Popup */
+  .knowledge-popup {
+    position: fixed; bottom: 20px; right: 20px; z-index: 100;
+    background: #1a2744; border: 1px solid #2d4a8a; border-radius: 12px;
+    padding: 16px 20px; max-width: 340px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    transform: translateY(20px); opacity: 0; transition: all 0.3s;
+    pointer-events: none;
+  }
+  .knowledge-popup.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
+  .knowledge-popup .kp-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .knowledge-popup .kp-icon { font-size: 1.2em; }
+  .knowledge-popup .kp-title { font-size: 0.9em; font-weight: 700; color: #79c0ff; }
+  .knowledge-popup .kp-body { font-size: 0.85em; line-height: 1.7; color: var(--text); }
+  .knowledge-popup .kp-jp { font-size: 0.82em; color: var(--muted); margin-top: 6px; font-style: italic; }
+  .knowledge-popup .kp-close { position: absolute; top: 10px; right: 12px; cursor: pointer; color: var(--muted); font-size: 1.1em; }
+
+  /* Result overlay */
+  #screen-result {
+    display: none; width: 100%; min-height: 100vh;
+    align-items: center; justify-content: center;
+    flex-direction: column; padding: 40px 20px; text-align: center;
+    background: linear-gradient(135deg, #0d1117 0%, #0d2233 100%);
+  }
+  .result-icon { font-size: 80px; margin-bottom: 20px; }
+  .result-title { font-size: 2.2em; font-weight: 700; color: var(--accent); margin-bottom: 12px; }
+  .result-desc { color: var(--muted); line-height: 1.8; max-width: 500px; font-size: 1em; margin-bottom: 32px; }
+  .result-stats {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
+    max-width: 620px; margin-bottom: 32px; width: 100%;
+  }
+  .result-stat-item {
+    background: var(--card-bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 8px; text-align: center;
+  }
+  .result-stat-item .rs-icon { font-size: 1.4em; margin-bottom: 6px; }
+  .result-stat-item .rs-name { font-size: 0.75em; color: var(--muted); margin-bottom: 4px; }
+  .result-stat-item .rs-val { font-size: 1.3em; font-weight: 700; }
+  .knowledge-summary {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px; max-width: 520px; width: 100%;
+    margin-bottom: 28px; text-align: left;
+  }
+  .knowledge-summary h3 { font-size: 0.9em; color: var(--accent); margin-bottom: 14px; }
+  .kl-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.85em;
+  }
+  .kl-item:last-child { border-bottom: none; }
+  .kl-item .kl-badge { background: #1f4788; color: #79c0ff; border-radius: 6px; padding: 2px 8px; font-size: 0.8em; white-space: nowrap; }
+  .kl-item .kl-text { color: var(--text); line-height: 1.6; }
+  .replay-btn {
+    background: transparent; color: var(--accent); border: 2px solid var(--accent);
+    border-radius: 10px; padding: 12px 40px; font-size: 1em; font-weight: 600;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .replay-btn:hover { background: var(--accent); color: #fff; }
+
+  /* Transition animation */
+  .fade-in { animation: fadeIn 0.4s ease forwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Misc */
+  .btn-primary {
+    background: var(--accent); color: #fff; border: none;
+    border-radius: 10px; padding: 14px 48px; font-size: 1.05em; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; letter-spacing: 0.05em;
+  }
+  .btn-primary:hover { background: #79c0ff; transform: translateY(-2px); box-shadow: 0 6px 24px rgba(88,166,255,0.35); }
+  
+  .mobile-note { color: var(--muted); font-size: 0.8em; margin-top: 16px; }
+
+  @media (max-width: 600px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .result-stats { grid-template-columns: repeat(3, 1fr); }
+    #screen-game { padding: 12px; }
+    .game-header { flex-direction: column; gap: 10px; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== TITLE SCREEN ===== -->
+<div id="screen-title">
+  <div class="logo">🏛️</div>
+  <h1>国家经营者</h1>
+  <div class="subtitle">经済シミュレーション</div>
+  <div class="eju-tag">📚 EJU 文综经济 × 模拟游戏</div>
+  <p class="desc">
+    你刚刚当选了一个小岛国家的首相。<br>
+    接下来的4年（4个回合），你的每一项政策决定<br>
+    都将影响通货膨胀、汇率、税收与国民满意度。<br>
+    <br>
+    <em>把国家带向繁荣，还是推进深渊——取决于你。</em>
+  </p>
+
+  <div style="margin-bottom:20px; font-size:0.9em; color:var(--muted);">选择难度</div>
+  <div class="diff-grid">
+    <div class="diff-card selected" data-diff="easy" onclick="selectDiff(this,'easy')">
+      <div class="diff-icon">🌱</div>
+      <div class="diff-name">入门</div>
+      <div class="diff-desc">事件冲击较轻<br>适合首次游玩</div>
+    </div>
+    <div class="diff-card" data-diff="normal" onclick="selectDiff(this,'normal')">
+      <div class="diff-icon">📊</div>
+      <div class="diff-name">标准</div>
+      <div class="diff-desc">EJU备考推荐<br>真实经济感</div>
+    </div>
+    <div class="diff-card" data-diff="hard" onclick="selectDiff(this,'hard')">
+      <div class="diff-icon">⚡</div>
+      <div class="diff-name">挑战</div>
+      <div class="diff-desc">危机频发<br>深度理解专用</div>
+    </div>
+  </div>
+
+  <button class="btn-primary" onclick="startGame()">开始执政 →</button>
+  <p class="mobile-note">💡 一局约10分钟 · 每回合都附有知识点讲解</p>
+</div>
+
+<!-- ===== GAME SCREEN ===== -->
+<div id="screen-game">
+  <!-- Header -->
+  <div class="game-header">
+    <div class="title-area">
+      <h2>🏛️ 国家经营者</h2>
+      <div class="year-text" id="year-text">第1届任期</div>
+    </div>
+    <div class="year-indicator" id="year-dots"></div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-panel">
+    <h3>📊 经济仪表盘</h3>
+    <div class="stats-grid" id="stats-grid"></div>
+  </div>
+
+  <!-- News -->
+  <div class="news-card fade-in" id="news-card">
+    <div class="news-header">
+      <div class="news-icon" id="news-icon">📰</div>
+      <div class="news-title" id="news-title">年度新闻简报</div>
+    </div>
+    <div class="news-body" id="news-body"></div>
+    <div class="news-impact" id="news-impact"></div>
+  </div>
+
+  <!-- Choices -->
+  <div class="choice-section">
+    <h3>🗳️ 选择政策应对</h3>
+    <div class="choice-grid" id="choice-grid"></div>
+    <button class="confirm-btn" id="confirm-btn" disabled onclick="confirmChoice()">
+      确认执行政策 →
+    </button>
+  </div>
+</div>
+
+<!-- ===== RESULT SCREEN ===== -->
+<div id="screen-result">
+  <div class="result-icon" id="result-icon">🏆</div>
+  <div class="result-title" id="result-title">经济奇迹</div>
+  <div class="result-desc" id="result-desc"></div>
+  <div class="result-stats" id="result-stats"></div>
+  <div class="knowledge-summary">
+    <h3>📚 本局涉及的EJU知识点</h3>
+    <div id="knowledge-list"></div>
+  </div>
+  <button class="replay-btn" onclick="replayGame()">🔄 再来一局</button>
+</div>
+
+<!-- Knowledge Popup -->
+<div class="knowledge-popup" id="kpopup">
+  <span class="kp-close" onclick="closeKnowledge()">✕</span>
+  <div class="kp-header">
+    <span class="kp-icon">💡</span>
+    <span class="kp-title">经济课堂</span>
+  </div>
+  <div class="kp-body" id="kp-body"></div>
+  <div class="kp-jp" id="kp-jp"></div>
+</div>
+
+<script>
+// ===== GAME DATA =====
+
+const KNOWLEDGE = {
+  gdp: { name: 'GDP成長率', jp: '国内総生産・経済成長率', body: 'GDP（国内総生産）是一个国家在一定时期内生产的所有最终产品和服务的总价值。成长率高表示经济活跃，低则预示衰退风险。' },
+  cpi: { name: '物価指数（CPI）', jp: 'インフレ・デフレ・物価', body: '消费者物价指数反映通货膨胀水平。过高（>70）为通货膨胀，过低（<30）为通货紧缩。两者都会损害经济稳定。' },
+  fx: { name: '为替レート安定度', jp: '円高・円安・為替介入', body: '汇率稳定度过低代表本币贬值（有利出口，但进口成本上升）；过高代表本币升值（进口便宜，但出口竞争力下降）。' },
+  debt: { name: '国債圧力', jp: '国債・財政赤字・格付け', body: '国债压力越高，政府财政越脆弱。超过80会导致信用评级下调，引发利率飙升形成恶性循环。减少国债需要增税或削减支出。' },
+  happy: { name: '国民満足度', jp: '民意・政策支持率', body: '民众满意度是你执政的"生命值"。低于20将被迫提前下台。财政政策、经济状况都会影响民心向背。' },
+  tax_cut: { name: '減税の乗数効果', jp: '財政政策・ケインズ理論', body: '减税让民众拥有更多可支配收入，消费增加，进而刺激企业生产，GDP增长幅度往往大于减税金额本身——这就是乘数效应。副作用是税收减少，可能加大财政赤字。' },
+  tax_raise: { name: '増税と財政健全化', jp: '財政再建・景気冷却', body: '增税能增加政府收入、压缩财政赤字，但同时减少了民众可支配收入，消费下降，往往导致GDP短期走弱。是财政健全化的常见手段，但需权衡时机。' },
+  pub_invest: { name: '公共投資とケインズ政策', jp: '有効需要の創出・財政出動', body: '政府直接投资基础设施，可快速创造就业、拉动GDP——这正是凯恩斯主义经济学的核心思路。但公共投资需要借债，会推高国债压力。' },
+  low_rate: { name: '金融緩和と低金利政策', jp: '日銀・金融政策・マネタリーベース', body: '降低利率让企业和个人更容易借贷，刺激投资和消费。但可能导致通货膨胀（CPI上升），且本币吸引力下降，汇率走弱。' },
+  high_rate: { name: '金利引き上げとデフレ', jp: '金融引き締め・円高圧力', body: '提高利率能冷却通货膨胀，吸引外资流入使本币升值，但借贷成本上升会抑制投资，GDP可能下降。' },
+  qe: { name: '量的緩和（QE）', jp: 'マネタリーベース拡大・国債買取', body: '央行直接购买国债，向市场注入资金。可以压低长期利率、刺激经济，但资金过多会引发通货膨胀。日本银行的量宽政策是EJU的高频考点。' },
+  export: { name: '輸出促進と比較優位', jp: '貿易収支・競争優位', body: '出口补贴可提升本国商品在国际市场的竞争力，带动GDP增长。但本币若贬值，进口商品价格会上升，可能推动输入性通货膨胀。' },
+  tariff: { name: '保護貿易主義と関税', jp: '輸入関税・貿易摩擦', body: '对进口商品征税可保护国内产业，但会引发贸易摩擦，对方可能反征关税，最终双方经济均受损。WTO框架下，过度保护主义受到国际约束。' },
+  fta: { name: '自由貿易協定（FTA/EPA）', jp: '貿易自由化・国際協定', body: 'FTA/EPA降低关税壁垒，促进贸易往来，有利于GDP增长和汇率稳定。但国内部分行业（如农业）可能受到冲击，民众满意度可能分化。' },
+  oil: { name: 'コストプッシュインフレ', jp: 'スタグフレーション・供給ショック', body: '石油价格上涨推动生产成本上升，企业被迫涨价——这是"成本推动型通货膨胀"。与需求拉动型通胀不同，此时GDP不升反降，形成"滞胀"困局。' },
+  deflation: { name: 'デフレスパイラル', jp: 'デフレ・流動性の罠', body: '物价下跌→企业收入减少→裁员减薪→消费更少→物价继续下跌……这个恶性循环称为"通缩螺旋"。日本在1990年代后长期面临这一问题。' },
+  bubble: { name: 'バブル経済と崩壊', jp: '資産バブル・不況・景気循環', body: '资产价格脱离实际价值大幅上涨形成"泡沫"。泡沫破裂时，资产缩水、信贷收紧，经济急速衰退。日本1991年的泡沫经济崩溃是教科书级别的案例。' },
+  fx_reserve: { name: '外貨準備と為替介入', jp: '国際収支・為替市場介入', body: '外汇储备是国家抵御汇率冲击的"弹药"。当本币贬值压力过大时，央行可抛售美元买入本币进行干预，但储备告急时干预能力会大幅下降。' },
+};
+
+const EVENTS = [
+  {
+    id: 'oil', icon: '🛢️', title: '石油危机爆发',
+    body: '国际油价因中东局势动荡突然飙升60%。进口能源成本大幅上升，企业生产成本压力骤增。',
+    impact: { cpi: 15, gdp: -8 },
+    impactText: '物价指数 +15，GDP成长率 -8',
+    knowledgeKey: 'oil',
+    choices: [
+      { letter: 'A', name: '发放能源补贴，稳定物价', effects: { cpi: -10, debt: 8, happy: 5 }, effectLabels: ['物价 -10','国债压力 +8','民满 +5'], knowledgeKey: 'pub_invest', remark: '短期稳定物价，但加大财政压力' },
+      { letter: 'B', name: '推进节能产业转型补贴', effects: { gdp: 5, debt: 12, happy: 3 }, effectLabels: ['GDP +5','国债压力 +12','民满 +3'], knowledgeKey: 'pub_invest', remark: '长期有利，但短期财政压力大' },
+      { letter: 'C', name: '顺势提高能源税调节需求', effects: { cpi: -6, debt: -5, happy: -8, gdp: -5 }, effectLabels: ['物价 -6','国债压力 -5','民满 -8'], knowledgeKey: 'tax_raise', remark: '压通胀有效，但民众不满' },
+    ]
+  },
+  {
+    id: 'fxcrisis', icon: '💱', title: '邻国央行突然大幅加息',
+    body: '邻国为抑制通胀突然将利率上调3%，热钱大量外流流向邻国，本国汇率承压明显走弱。',
+    impact: { fx: -12 },
+    impactText: '汇率稳定度 -12',
+    knowledgeKey: 'fx',
+    choices: [
+      { letter: 'A', name: '跟进加息，稳定汇率', effects: { fx: 10, cpi: -8, gdp: -6 }, effectLabels: ['汇率 +10','物价 -8','GDP -6'], knowledgeKey: 'high_rate', remark: '汇率稳定，但经济降温' },
+      { letter: 'B', name: '动用外汇储备干预', effects: { fx: 14, debt: 8 }, effectLabels: ['汇率 +14','国债压力 +8'], knowledgeKey: 'fx_reserve', remark: '立竿见影，但消耗储备' },
+      { letter: 'C', name: '顺势引导贬值，刺激出口', effects: { gdp: 10, cpi: 8, fx: -5 }, effectLabels: ['GDP +10','物价 +8','汇率 -5'], knowledgeKey: 'export', remark: '出口受益，但通胀压力上升' },
+    ]
+  },
+  {
+    id: 'bubble', icon: '💥', title: '科技泡沫骤然破裂',
+    body: '持续3年的科技股热潮戛然而止，股市单日暴跌30%，企业投资信心崩溃，消费急剧萎缩。',
+    impact: { gdp: -15, happy: -8 },
+    impactText: 'GDP成长率 -15，民众满意度 -8',
+    knowledgeKey: 'bubble',
+    choices: [
+      { letter: 'A', name: '紧急推出大规模公共投资', effects: { gdp: 12, debt: 16, happy: 6 }, effectLabels: ['GDP +12','国债压力 +16','民满 +6'], knowledgeKey: 'pub_invest', remark: '凯恩斯式救市，代价是国债' },
+      { letter: 'B', name: '央行紧急降息，刺激信贷', effects: { gdp: 8, cpi: 10, fx: -6 }, effectLabels: ['GDP +8','物价 +10','汇率 -6'], knowledgeKey: 'low_rate', remark: '货币宽松，注意通胀副作用' },
+      { letter: 'C', name: '静观其变，相信市场自愈', effects: { gdp: -5, happy: -5 }, effectLabels: ['GDP -5','民满 -5'], knowledgeKey: 'gdp', remark: '不干预有风险，但不增加债务' },
+    ]
+  },
+  {
+    id: 'deflation', icon: '❄️', title: '通货紧缩螺旋警报',
+    body: '连续两季度物价下跌，消费者推迟购买等待更低价格，企业被迫降价抛售，经济陷入通缩恐慌。',
+    impact: { cpi: -14, gdp: -8 },
+    impactText: '物价指数 -14，GDP成长率 -8',
+    knowledgeKey: 'deflation',
+    choices: [
+      { letter: 'A', name: '量化宽松，央行购买国债', effects: { cpi: 12, gdp: 8, debt: -5 }, effectLabels: ['物价 +12','GDP +8','国债压力 -5'], knowledgeKey: 'qe', remark: '日本银行的标志性政策手段' },
+      { letter: 'B', name: '政府直接发放消费券', effects: { cpi: 8, gdp: 6, debt: 10, happy: 8 }, effectLabels: ['物价 +8','GDP +6','国债 +10','民满 +8'], knowledgeKey: 'pub_invest', remark: '见效快，民众喜欢，但增加债务' },
+      { letter: 'C', name: '大幅降低所得税', effects: { cpi: 5, gdp: 10, debt: 12, happy: 7 }, effectLabels: ['物价 +5','GDP +10','国债 +12','民满 +7'], knowledgeKey: 'tax_cut', remark: '乘数效应发挥作用，财政压力大' },
+    ]
+  },
+  {
+    id: 'trade_surplus', icon: '📦', title: '出口大幅增长',
+    body: '本国电子产品在国际市场竞争力强劲，贸易顺差创历史新高，外汇流入增加推动本币升值压力。',
+    impact: { gdp: 12, fx: 10 },
+    impactText: 'GDP成长率 +12，汇率稳定（本币升值压力） +10',
+    knowledgeKey: 'export',
+    choices: [
+      { letter: 'A', name: '顺势引导本币升值，抑制通胀', effects: { cpi: -8, fx: 5, gdp: -5 }, effectLabels: ['物价 -8','汇率 +5','GDP -5'], knowledgeKey: 'fx', remark: '有利物价，但出口竞争力下降' },
+      { letter: 'B', name: '干预汇市压制升值，维护出口', effects: { fx: -8, gdp: 6, cpi: 5 }, effectLabels: ['汇率 -8','GDP +6','物价 +5'], knowledgeKey: 'fx_reserve', remark: '保持出口优势，但有通胀压力' },
+      { letter: 'C', name: '推进产业升级，投资未来', effects: { gdp: 5, debt: 8, happy: 5 }, effectLabels: ['GDP +5','国债 +8','民满 +5'], knowledgeKey: 'pub_invest', remark: '长远布局，短期财政压力' },
+    ]
+  },
+  {
+    id: 'debt_rating', icon: '📉', title: '国际评级机构下调信用评级',
+    body: '因财政赤字持续扩大，国际三大评级机构将本国国债评级下调一级，引发市场恐慌，国债利率上升。',
+    impact: { debt: 16, happy: -8 },
+    impactText: '国债压力 +16，民众满意度 -8',
+    knowledgeKey: 'debt',
+    choices: [
+      { letter: 'A', name: '宣布财政紧缩计划', effects: { debt: -12, gdp: -8, happy: -10 }, effectLabels: ['国债压力 -12','GDP -8','民满 -10'], knowledgeKey: 'tax_raise', remark: '财政可信度恢复，但代价高昂' },
+      { letter: 'B', name: '增值税提高2%', effects: { debt: -8, gdp: -5, happy: -7 }, effectLabels: ['国债压力 -8','GDP -5','民满 -7'], knowledgeKey: 'tax_raise', remark: '温和紧缩，效果有限但可持续' },
+      { letter: 'C', name: '召开记者会强调经济基本面良好', effects: { happy: 3 }, effectLabels: ['民满 +3'], knowledgeKey: 'debt', remark: '不解决根本问题，危机继续累积' },
+    ]
+  },
+];
+
+// Policy cards (shown in year 1 tutorial and as fallback)
+const POLICY_CARDS = [
+  {
+    letter: 'A', name: '减税刺激消费',
+    effects: { gdp: 10, happy: 8, debt: 12 },
+    effectLabels: ['GDP +10', '民满 +8', '国债压力 +12'],
+    knowledgeKey: 'tax_cut'
+  },
+  {
+    letter: 'B', name: '降低利率（货币宽松）',
+    effects: { gdp: 8, cpi: 10, fx: -8 },
+    effectLabels: ['GDP +8', '物价 +10', '汇率 -8'],
+    knowledgeKey: 'low_rate'
+  },
+  {
+    letter: 'C', name: '增税整顿财政',
+    effects: { debt: -15, gdp: -8, happy: -10 },
+    effectLabels: ['国债压力 -15', 'GDP -8', '民满 -10'],
+    knowledgeKey: 'tax_raise'
+  },
+  {
+    letter: 'D', name: '推进自由贸易协定',
+    effects: { gdp: 8, fx: 5, happy: -3 },
+    effectLabels: ['GDP +8', '汇率 +5', '民满 -3'],
+    knowledgeKey: 'fta'
+  },
+];
+
+// ===== GAME STATE =====
+let state = {
+  year: 1,
+  maxYears: 4,
+  difficulty: 'easy',
+  stats: { gdp: 50, cpi: 50, fx: 50, debt: 30, happy: 60 },
+  selectedChoice: null,
+  currentEvent: null,
+  knowledgeLog: new Set(),
+  diffMultiplier: 1.0,
+};
+
+const STAT_META = [
+  { key: 'gdp', name: 'GDP成长率', icon: '📈', good: 'high', unit: '' },
+  { key: 'cpi', name: '物价指数', icon: '💴', good: 'mid', unit: '' },
+  { key: 'fx', name: '汇率稳定度', icon: '💱', good: 'mid', unit: '' },
+  { key: 'debt', name: '国债压力', icon: '🏦', good: 'low', unit: '' },
+  { key: 'happy', name: '民众满意度', icon: '😊', good: 'high', unit: '' },
+];
+
+function selectDiff(el, diff) {
+  document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.difficulty = diff;
+}
+
+function startGame() {
+  state.year = 1;
+  state.stats = { gdp: 50, cpi: 50, fx: 50, debt: 30, happy: 60 };
+  state.selectedChoice = null;
+  state.knowledgeLog = new Set();
+  state.diffMultiplier = state.difficulty === 'easy' ? 0.65 : state.difficulty === 'hard' ? 1.3 : 1.0;
+
+  document.getElementById('screen-title').style.display = 'none';
+  document.getElementById('screen-result').style.display = 'none';
+  const gs = document.getElementById('screen-game');
+  gs.style.display = 'flex';
+
+  renderYearDots();
+  renderStats(null);
+  loadRound();
+}
+
+function renderYearDots() {
+  const container = document.getElementById('year-dots');
+  container.innerHTML = '';
+  for (let i = 1; i <= state.maxYears; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'year-dot' + (i < state.year ? ' done' : i === state.year ? ' current' : '');
+    dot.textContent = i;
+    container.appendChild(dot);
+  }
+  document.getElementById('year-text').textContent = `第${state.year}届任期 / 共${state.maxYears}届`;
+}
+
+function renderStats(deltas) {
+  const grid = document.getElementById('stats-grid');
+  grid.innerHTML = '';
+  STAT_META.forEach(m => {
+    const val = Math.round(state.stats[m.key]);
+    const clampedVal = Math.max(0, Math.min(100, val));
+    
+    let fillColor = '#58a6ff';
+    if (m.good === 'high') {
+      fillColor = val >= 55 ? '#3fb950' : val >= 35 ? '#d29922' : '#f85149';
+    } else if (m.good === 'low') {
+      fillColor = val <= 45 ? '#3fb950' : val <= 65 ? '#d29922' : '#f85149';
+    } else {
+      fillColor = (val >= 35 && val <= 65) ? '#3fb950' : (val >= 20 && val <= 80) ? '#d29922' : '#f85149';
+    }
+
+    let delta = deltas ? deltas[m.key] || 0 : 0;
+    let deltaHtml = '';
+    if (delta > 0) deltaHtml = `<span class="delta-pos">▲${Math.abs(Math.round(delta))}</span>`;
+    else if (delta < 0) deltaHtml = `<span class="delta-neg">▼${Math.abs(Math.round(delta))}</span>`;
+    else if (deltas) deltaHtml = `<span class="delta-neutral">—</span>`;
+
+    grid.innerHTML += `
+      <div class="stat-item">
+        <div class="stat-label">
+          <span class="stat-name">${m.icon} ${m.name}</span>
+          <span class="stat-val" style="color:${fillColor}">${clampedVal}</span>
+        </div>
+        <div class="stat-bar"><div class="stat-fill" style="width:${clampedVal}%;background:${fillColor}"></div></div>
+        <div class="stat-delta">${deltaHtml}</div>
+      </div>
+    `;
+  });
+}
+
+function loadRound() {
+  state.selectedChoice = null;
+  document.getElementById('confirm-btn').disabled = true;
+
+  // Pick event (avoid repeating if possible)
+  const shuffled = [...EVENTS].sort(() => Math.random() - 0.5);
+  state.currentEvent = shuffled[0];
+
+  // Apply event impact
+  const eventDeltas = {};
+  Object.keys(state.currentEvent.impact).forEach(k => {
+    const delta = state.currentEvent.impact[k] * state.diffMultiplier;
+    state.stats[k] = Math.max(0, Math.min(100, state.stats[k] + delta));
+    eventDeltas[k] = delta;
+  });
+
+  // Clamp
+  Object.keys(state.stats).forEach(k => {
+    state.stats[k] = Math.max(0, Math.min(100, state.stats[k]));
+  });
+
+  renderStats(eventDeltas);
+  renderEvent();
+  renderChoices(state.currentEvent.choices);
+  if (state.currentEvent.knowledgeKey) state.knowledgeLog.add(state.currentEvent.knowledgeKey);
+}
+
+function renderEvent() {
+  const ev = state.currentEvent;
+  document.getElementById('news-icon').textContent = ev.icon;
+  document.getElementById('news-title').textContent = `第${state.year}年度新闻简报 · ${ev.title}`;
+  document.getElementById('news-body').textContent = ev.body;
+  
+  const impactEl = document.getElementById('news-impact');
+  // Build impact html
+  let impactHtml = '<span class="impact-label">⚠️ 市场冲击：</span>' + ev.impactText;
+  impactEl.innerHTML = impactHtml;
+
+  // Show knowledge popup for event
+  if (ev.knowledgeKey) showKnowledge(ev.knowledgeKey);
+}
+
+function renderChoices(choices) {
+  const grid = document.getElementById('choice-grid');
+  grid.innerHTML = '';
+  choices.forEach((c, i) => {
+    const effectTags = c.effectLabels.map(l => {
+      const cls = l.includes('+') ? 'effect-pos' : l.includes('-') ? 'effect-neg' : 'effect-neut';
+      return `<span class="effect-tag ${cls}">${l}</span>`;
+    }).join('');
+
+    const k = c.knowledgeKey ? KNOWLEDGE[c.knowledgeKey] : null;
+    const kTag = k ? `<div class="knowledge-tag">📚 知识点：${k.name}</div>` : '';
+
+    grid.innerHTML += `
+      <div class="choice-card" data-idx="${i}" onclick="selectChoice(this, ${i})">
+        <div class="choice-top">
+          <span class="choice-letter">${c.letter}</span>
+          <span class="choice-name">${c.name}</span>
+        </div>
+        <div class="choice-effects">${effectTags}</div>
+        ${kTag}
+      </div>
+    `;
+  });
+}
+
+function selectChoice(el, idx) {
+  document.querySelectorAll('.choice-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedChoice = idx;
+  document.getElementById('confirm-btn').disabled = false;
+
+  // Show knowledge popup for this choice
+  const choice = state.currentEvent.choices[idx];
+  if (choice.knowledgeKey) showKnowledge(choice.knowledgeKey);
+}
+
+function confirmChoice() {
+  if (state.selectedChoice === null) return;
+
+  const choice = state.currentEvent.choices[state.selectedChoice];
+  if (choice.knowledgeKey) state.knowledgeLog.add(choice.knowledgeKey);
+
+  // Apply choice effects
+  const choiceDeltas = {};
+  Object.keys(choice.effects).forEach(k => {
+    const delta = choice.effects[k] * state.diffMultiplier;
+    state.stats[k] = Math.max(0, Math.min(100, state.stats[k] + delta));
+    choiceDeltas[k] = delta;
+  });
+
+  // Natural reversion toward 50
+  Object.keys(state.stats).forEach(k => {
+    const reversion = (50 - state.stats[k]) * 0.08;
+    state.stats[k] = Math.max(0, Math.min(100, state.stats[k] + reversion));
+    if (!choiceDeltas[k]) choiceDeltas[k] = reversion;
+  });
+
+  renderStats(choiceDeltas);
+
+  // Check early game over
+  if (state.stats.happy <= 5) {
+    setTimeout(() => showResult('collapse'), 600);
+    return;
+  }
+  if (state.stats.debt >= 92) {
+    setTimeout(() => showResult('bankrupt'), 600);
+    return;
+  }
+
+  state.year++;
+  if (state.year > state.maxYears) {
+    setTimeout(() => showResult('end'), 600);
+  } else {
+    setTimeout(() => {
+      renderYearDots();
+      loadRound();
+    }, 700);
+  }
+}
+
+function showKnowledge(key) {
+  const k = KNOWLEDGE[key];
+  if (!k) return;
+  document.getElementById('kp-body').textContent = k.body;
+  document.getElementById('kp-jp').textContent = `📖 EJU键词：${k.jp}`;
+  const popup = document.getElementById('kpopup');
+  popup.classList.add('show');
+  clearTimeout(popup._timer);
+  popup._timer = setTimeout(() => popup.classList.remove('show'), 6000);
+}
+
+function closeKnowledge() {
+  document.getElementById('kpopup').classList.remove('show');
+}
+
+function showResult(reason) {
+  const s = state.stats;
+  document.getElementById('screen-game').style.display = 'none';
+  const rs = document.getElementById('screen-result');
+  rs.style.display = 'flex';
+
+  let ending;
+  if (reason === 'collapse') {
+    ending = { icon: '🗳️', title: '民心尽失', desc: '民众愤怒已达顶点。街头抗议蔓延，议会通过不信任案，你被迫提前卸任。历史将记住这段动荡岁月。', color: '#f85149' };
+  } else if (reason === 'bankrupt') {
+    ending = { icon: '💸', title: '财政破产', desc: '国债山积，利率飙升，政府已无力偿债。国际货币基金组织介入，国家陷入前所未有的财政危机。', color: '#f85149' };
+  } else {
+    // Calculate composite score
+    const gdpScore = s.gdp;
+    const cpiScore = 100 - Math.abs(s.cpi - 50) * 2;
+    const fxScore = 100 - Math.abs(s.fx - 50) * 2;
+    const debtScore = 100 - s.debt;
+    const happyScore = s.happy;
+    const total = (gdpScore * 0.25 + cpiScore * 0.15 + fxScore * 0.15 + debtScore * 0.2 + happyScore * 0.25);
+
+    if (total >= 72 && s.happy >= 65) {
+      ending = { icon: '🏆', title: '经济奇迹', desc: '你的经济政策成效卓著，GDP稳步增长，物价平稳，民心凝聚。国际社会将你的施政经验誉为"发展奇迹"，你将被载入史册。', color: '#3fb950' };
+    } else if (s.cpi >= 80) {
+      ending = { icon: '🌀', title: '通胀噩梦', desc: '物价飞涨，货币购买力大幅缩水。民众抱怨生活成本难以承受，你的任期以通货膨胀危机画上句号。', color: '#d29922' };
+    } else if (s.gdp <= 28) {
+      ending = { icon: '📉', title: '经济衰退', desc: '经济陷入长期低谷，失业率高企，通缩阴影笼罩。你的继任者将面临一个千疮百孔的烂摊子。', color: '#f85149' };
+    } else if (total >= 58) {
+      ending = { icon: '📈', title: '稳健发展', desc: '国家在你手中保持了相对稳健的发展势头。没有惊天动地，但民众生活切实改善，这本身就是一种成就。', color: '#58a6ff' };
+    } else {
+      ending = { icon: '🌥️', title: '波折任期', desc: '任期内经历了不少风波，经济的起伏考验了所有人的耐心。有得有失，历史会给出更公正的评价。', color: '#d29922' };
+    }
+  }
+
+  document.getElementById('result-icon').textContent = ending.icon;
+  document.getElementById('result-title').textContent = ending.title;
+  document.getElementById('result-title').style.color = ending.color;
+  document.getElementById('result-desc').textContent = ending.desc;
+
+  // Final stats
+  const statsEl = document.getElementById('result-stats');
+  statsEl.innerHTML = STAT_META.map(m => {
+    const v = Math.round(Math.max(0, Math.min(100, state.stats[m.key])));
+    let col = '#58a6ff';
+    if (m.good === 'high') col = v >= 55 ? '#3fb950' : v >= 35 ? '#d29922' : '#f85149';
+    else if (m.good === 'low') col = v <= 45 ? '#3fb950' : v <= 65 ? '#d29922' : '#f85149';
+    else col = (v >= 35 && v <= 65) ? '#3fb950' : '#d29922';
+    return `<div class="result-stat-item">
+      <div class="rs-icon">${m.icon}</div>
+      <div class="rs-name">${m.name}</div>
+      <div class="rs-val" style="color:${col}">${v}</div>
+    </div>`;
+  }).join('');
+
+  // Knowledge list
+  const knList = document.getElementById('knowledge-list');
+  const keys = Array.from(state.knowledgeLog);
+  if (keys.length === 0) {
+    knList.innerHTML = '<div style="color:var(--muted);font-size:0.85em">暂无记录</div>';
+  } else {
+    knList.innerHTML = keys.map(k => {
+      const info = KNOWLEDGE[k];
+      if (!info) return '';
+      return `<div class="kl-item">
+        <span class="kl-badge">${info.jp.split('・')[0]}</span>
+        <span class="kl-text"><strong>${info.name}</strong>：${info.body.substring(0, 60)}…</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+function replayGame() {
+  document.getElementById('screen-result').style.display = 'none';
+  document.getElementById('screen-title').style.display = 'flex';
+}
+
+// Init
+document.getElementById('screen-game').style.display = 'none';
+document.getElementById('screen-result').style.display = 'none';
+</script>
+</body>
+</html>
