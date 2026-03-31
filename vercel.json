@@ -1,5 +1,16 @@
 {
   "buildCommand": "",
   "outputDirectory": ".",
-  "devCommand": "python -m http.server 3000"
+  "devCommand": "python -m http.server 3000",
+  "headers": [
+    {
+      "source": "/eju-economy-game.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    }
+  ]
 }
