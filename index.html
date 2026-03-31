@@ -287,21 +287,7 @@
     display: none;
   }
   
-  /* Knowledge Info Icon */
-  .knowledge-info-icon {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 18px; height: 18px; border-radius: 50%; 
-    background: #1f4788; color: #79c0ff; font-size: 0.7em; font-weight: 700;
-    cursor: pointer; transition: all 0.2s;
-    margin-left: auto; flex-shrink: 0;
-  }
-  .knowledge-info-icon:hover { background: #2d5fa8; transform: scale(1.1); }
-  .knowledge-info-icon.active { background: #00c8ff; }
-  
-  /* Choice Card - with Knowledge Icon */
-  .choice-card .choice-top { display: flex; align-items: center; justify-content: space-between; width: 100%; }
-  .choice-card .choice-name-area { display: flex; align-items: center; gap: 8px; flex: 1; }
-  .choice-card .choice-name { font-weight: 600; font-size: 0.95em; }
+
   
   /* Mobile: Knowledge Popup remains desktop-style, just smaller */
   @media (max-width: 768px) {
@@ -425,7 +411,13 @@
     50% { opacity: 0.6; }
   }
 
-  /* Knowledge Point Icons & Buttons */
+  /* ===== 知识点按钮 - 统一样式 + 自定义光标 ===== */
+  .knowledge-info-icon,
+  .news-knowledge-btn {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><defs><radialGradient id="grad"><stop offset="0%25" style="stop-color:%2358a6ff;stop-opacity:1" /><stop offset="100%25" style="stop-color:%2300c8ff;stop-opacity:0.6" /></radialGradient></defs><circle cx="12" cy="12" r="8" fill="url(%23grad)" opacity="0.8"/><circle cx="12" cy="12" r="6" fill="none" stroke="%2358a6ff" stroke-width="1.5"/><circle cx="12" cy="12" r="2" fill="%2358a6ff"/><path d="M12 6 L14 10 L10 10 Z" fill="%2358a6ff" opacity="0.7"/></svg>') 12 12, auto;
+  }
+
+  /* 知识点信息图标 */
   .knowledge-info-icon {
     display: inline-flex;
     align-items: center;
@@ -436,7 +428,6 @@
     border: 1.5px solid rgba(88,166,255,0.4);
     border-radius: 50%;
     font-size: 1.1em;
-    cursor: pointer;
     animation: pulse 2s infinite;
     transition: all 0.3s ease;
     flex-shrink: 0;
@@ -454,7 +445,7 @@
     transform: scale(0.95);
   }
 
-  /* News Card Knowledge Button */
+  /* 新闻卡知识点按钮 */
   .news-knowledge-btn {
     background: transparent;
     border: 1px solid rgba(88,166,255,0.3);
@@ -462,7 +453,6 @@
     border-radius: 6px;
     padding: 4px 10px;
     font-size: 0.8em;
-    cursor: pointer;
     transition: all 0.3s ease;
     white-space: nowrap;
     flex-shrink: 0;
@@ -1928,5 +1918,6 @@ document.getElementById('screen-result').style.display = 'none';
 </script>
 </body>
 </html>
-< ! - -   v 1 . 0   d e p l o y e d   a t   0 3 / 3 1 / 2 0 2 6   1 9 : 1 1 : 4 6   - - >  
+< ! - -   v 1 . 0   d e p l o y e d   a t   0 3 / 3 1 / 2 0 2 6   1 9 : 1 1 : 4 6   - - > 
+ 
  
