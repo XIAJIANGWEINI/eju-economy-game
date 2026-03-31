@@ -425,58 +425,99 @@
     50% { opacity: 0.6; }
   }
 
-  /* Knowledge Point Icons & Buttons */
+  /* Breathing Animation - Subtle and elegant */
+  @keyframes breathe {
+    0%, 100% { 
+      box-shadow: 0 0 8px rgba(0,200,255,0.3), inset 0 0 8px rgba(0,200,255,0.1);
+    }
+    50% { 
+      box-shadow: 0 0 20px rgba(0,200,255,0.6), inset 0 0 12px rgba(0,200,255,0.2);
+    }
+  }
+
+  /* Ripple Effect - Elegant wave on click */
+  @keyframes ripple {
+    0% {
+      box-shadow: 0 0 0 0 rgba(0,200,255,0.6);
+    }
+    100% {
+      box-shadow: 0 0 0 12px rgba(0,200,255,0);
+    }
+  }
+
+  /* Knowledge Point Icons & Buttons - Aurora Gradient Style */
   .knowledge-info-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: rgba(88,166,255,0.2);
-    border: 1.5px solid rgba(88,166,255,0.4);
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, rgba(0,200,255,0.1), rgba(88,166,255,0.1));
+    border: 2px solid #00c8ff;
     border-radius: 50%;
-    font-size: 1.1em;
+    font-size: 1.2em;
     cursor: pointer;
-    animation: pulse 2s infinite;
+    animation: breathe 3s ease-in-out infinite;
     transition: all 0.3s ease;
     flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .knowledge-info-icon::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+    opacity: 0;
   }
 
   .knowledge-info-icon:hover {
-    background: rgba(88,166,255,0.35);
-    border-color: var(--accent);
-    transform: scale(1.15);
+    background: linear-gradient(135deg, rgba(0,200,255,0.25), rgba(88,166,255,0.25));
+    border-color: #79c0ff;
+    transform: scale(1.1);
     animation: none;
-    box-shadow: 0 0 12px rgba(88,166,255,0.3);
+    box-shadow: 0 0 24px rgba(0,200,255,0.5), inset 0 0 12px rgba(0,200,255,0.2);
   }
 
   .knowledge-info-icon:active {
     transform: scale(0.95);
+    animation: ripple 0.6s ease-out;
   }
 
   /* News Card Knowledge Button */
   .news-knowledge-btn {
-    background: transparent;
-    border: 1px solid rgba(88,166,255,0.3);
-    color: #58a6ff;
-    border-radius: 6px;
-    padding: 4px 10px;
-    font-size: 0.8em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, rgba(0,200,255,0.1), rgba(88,166,255,0.1));
+    border: 2px solid #00c8ff;
+    border-radius: 50%;
+    font-size: 1.2em;
     cursor: pointer;
+    animation: breathe 3s ease-in-out infinite;
     transition: all 0.3s ease;
-    white-space: nowrap;
     flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
   }
 
   .news-knowledge-btn:hover {
-    background: rgba(88,166,255,0.15);
-    border-color: var(--accent);
-    color: #79c0ff;
-    box-shadow: 0 0 8px rgba(88,166,255,0.2);
+    background: linear-gradient(135deg, rgba(0,200,255,0.25), rgba(88,166,255,0.25));
+    border-color: #79c0ff;
+    transform: scale(1.1);
+    animation: none;
+    box-shadow: 0 0 24px rgba(0,200,255,0.5), inset 0 0 12px rgba(0,200,255,0.2);
   }
 
   .news-knowledge-btn:active {
     transform: scale(0.95);
+    animation: ripple 0.6s ease-out;
   }
   .result-stats {
     display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
