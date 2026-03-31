@@ -38,17 +38,19 @@
     background: linear-gradient(135deg, #0d1117 0%, #1a2744 100%);
     text-align: center; padding: 40px 20px;
   }
-  #screen-title .logo { font-size: 64px; margin-bottom: 16px; }
-  #screen-title h1 { font-size: 2.4em; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
-  #screen-title .subtitle { color: var(--muted); font-size: 1.1em; margin-bottom: 8px; }
+  #screen-title .logo { font-size: 64px; margin-bottom: 16px; animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  #screen-title h1 { font-size: 2.4em; font-weight: 700; color: var(--accent); margin-bottom: 8px; animation: slideUp 0.6s ease-out 0.2s backwards; }
+  #screen-title .subtitle { color: var(--muted); font-size: 1.1em; margin-bottom: 8px; animation: slideUp 0.6s ease-out 0.3s backwards; }
   #screen-title .eju-tag {
     background: #1f4788; color: #79c0ff; 
     border-radius: 20px; padding: 4px 16px; font-size: 0.9em;
     display: inline-block; margin-bottom: 32px;
+    animation: slideUp 0.6s ease-out 0.4s backwards;
   }
   #screen-title .desc {
     max-width: 520px; line-height: 1.8; color: var(--muted);
     margin-bottom: 40px; font-size: 1em;
+    animation: slideUp 0.6s ease-out 0.5s backwards;
   }
 
   /* ===== DIFFICULTY SELECT ===== */
@@ -66,123 +68,335 @@
   /* ===== MAIN GAME SCREEN ===== */
   #screen-game {
     display: none; width: 100%; max-width: 900px;
-    padding: 20px; flex-direction: column; gap: 16px;
+    padding: 16px; flex-direction: column; gap: 12px;
+    animation: fadeIn 0.5s ease-in;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   /* Header */
   .game-header {
     display: flex; justify-content: space-between; align-items: center;
     background: var(--panel); border: 1px solid var(--border);
-    border-radius: 12px; padding: 14px 20px;
+    border-radius: 12px; padding: 8px 12px;
   }
   .game-header .title-area h2 { font-size: 1.1em; color: var(--accent); }
-  .game-header .title-area .year-text { font-size: 0.85em; color: var(--muted); margin-top: 2px; }
-  .year-indicator { display: flex; gap: 8px; }
+  .game-header .title-area .year-text { font-size: 0.85em; color: var(--accent); font-weight: 600; margin-top: 0; }
+  .year-indicator { display: flex; gap: 3px; flex-wrap: nowrap; }
   .year-dot {
-    width: 28px; height: 28px; border-radius: 50%;
+    width: 22px; height: 22px; border-radius: 50%;
     background: var(--border); display: flex; align-items: center; justify-content: center;
-    font-size: 0.75em; font-weight: 600; color: var(--muted); transition: all 0.3s;
+    font-size: 0.65em; font-weight: 600; color: var(--muted); transition: all 0.3s;
   }
-  .year-dot.done { background: var(--green); color: #fff; }
+  .year-dot.done { background: rgba(88,166,255,0.2); color: #58a6ff; }
   .year-dot.current { background: var(--accent); color: #fff; box-shadow: 0 0 12px var(--accent); }
+  
+  /* 12-round year dots optimization */
+  @media (max-width: 768px) {
+    .year-indicator { gap: 4px; }
+    .year-dot { width: 22px; height: 22px; font-size: 0.65em; }
+  }
 
-  /* Stats Dashboard */
+  /* Stats Dashboard - Compact Progress Bar Style */
   .stats-panel {
     background: var(--panel); border: 1px solid var(--border);
-    border-radius: 12px; padding: 16px 20px;
+    border-radius: 12px; padding: 12px 16px;
+    min-height: auto;
   }
-  .stats-panel h3 { font-size: 0.9em; color: var(--muted); margin-bottom: 14px; letter-spacing: 0.05em; text-transform: uppercase; }
-  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .stat-item { display: flex; flex-direction: column; gap: 4px; }
-  .stat-label { display: flex; justify-content: space-between; align-items: center; }
-  .stat-name { font-size: 0.88em; color: var(--text); display: flex; align-items: center; gap: 6px; }
-  .stat-val { font-size: 0.88em; font-weight: 700; }
-  .stat-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; position: relative; }
-  .stat-fill { height: 100%; border-radius: 4px; transition: width 0.6s cubic-bezier(.4,0,.2,1); }
-  .stat-delta { font-size: 0.78em; text-align: right; height: 16px; transition: opacity 0.5s; }
+  .stats-panel h3 { font-size: 0.8em; color: var(--muted); margin-bottom: 8px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .stats-grid { display: flex; flex-direction: column; gap: 10px; }
+  .stat-item { 
+    display: grid; 
+    grid-template-columns: 120px 1fr 50px; 
+    align-items: center; 
+    gap: 8px; 
+    height: auto; 
+    padding: 0; 
+    background: transparent; 
+    border-radius: 0; 
+    min-height: 0;
+  }
+  .stat-label { display: flex; align-items: center; gap: 6px; width: 100%; }
+  .stat-name { font-size: 0.8em; color: var(--text); display: flex; align-items: center; gap: 4px; white-space: nowrap; flex-shrink: 0; }
+  .stat-val { font-size: 0; font-weight: 700; display: none; }
+  .stat-warn { font-size: 0.85em; margin-left: 4px; flex-shrink: 0; }
+  .stat-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; position: relative; width: 100%; }
+  .stat-fill { height: 100%; border-radius: 3px; transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+  .stat-delta { font-size: 0.75em; text-align: right; height: auto; transition: opacity 0.5s; white-space: nowrap; flex-shrink: 0; }
   .delta-pos { color: var(--green); }
   .delta-neg { color: var(--red); }
   .delta-neutral { color: var(--muted); }
 
   /* News / Event Card */
   .news-card {
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 12px; padding: 20px;
+    background: linear-gradient(135deg, #1a2744 0%, #162850 50%, #1a2744 100%);
+    border: 1px solid rgba(88,166,255,0.2); border-radius: 12px; padding: 16px;
     border-left: 4px solid var(--accent);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4), inset 0 1px 0 rgba(88,166,255,0.1);
+    transition: all 0.3s ease;
+  }
+  .news-card:hover {
+    box-shadow: 0 8px 24px rgba(88,166,255,0.2), inset 0 1px 0 rgba(88,166,255,0.15);
+    border-color: rgba(88,166,255,0.4);
   }
   .news-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
   .news-header .news-icon { font-size: 1.6em; }
   .news-header .news-title { font-size: 1em; font-weight: 600; color: var(--accent); }
-  .news-body { line-height: 1.75; color: var(--text); font-size: 0.95em; margin-bottom: 12px; }
+  .news-body { line-height: 1.8; color: var(--text); font-size: 0.95em; margin-bottom: 12px; }
   .news-impact {
-    background: #1a1e26; border-radius: 8px; padding: 10px 14px;
+    background: rgba(0,200,255,0.08); border-radius: 8px; padding: 10px 14px;
     font-size: 0.85em; color: var(--muted);
     display: flex; align-items: center; gap: 8px;
+    border: 1px solid rgba(88,166,255,0.15);
+    transition: all 0.3s ease;
+  }
+  .news-impact:hover {
+    background: rgba(0,200,255,0.12);
+    border-color: rgba(88,166,255,0.3);
   }
   .news-impact .impact-label { color: var(--yellow); font-weight: 600; }
+  
+  /* News card clickable hint */
+  .news-card { cursor: pointer; position: relative; }
+  .news-card:hover { background: rgba(0,200,255,0.05); border-color: var(--accent); }
+  .news-hint { 
+    font-size: 0.75em; color: var(--muted); text-align: center; 
+    margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border);
+    opacity: 0.7;
+  }
 
   /* Policy / Response Section */
-  .choice-section { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
-  .choice-section h3 { font-size: 0.9em; color: var(--muted); margin-bottom: 14px; letter-spacing: 0.05em; text-transform: uppercase; }
-  .choice-grid { display: flex; flex-direction: column; gap: 10px; }
+  .choice-section { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+  .choice-section h3 { font-size: 0.85em; color: var(--muted); margin-bottom: 10px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .choice-grid { display: flex; flex-direction: column; gap: 8px; }
   
   .choice-card {
-    background: var(--card-bg); border: 2px solid var(--border);
-    border-radius: 10px; padding: 14px 16px; cursor: pointer;
-    transition: all 0.2s; position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #1f2a3a 0%, #1a2a42 100%);
+    border: 2px solid var(--border); border-radius: 10px; padding: 14px;
+    cursor: pointer; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative; overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   }
-  .choice-card:hover { border-color: var(--accent); background: #1c2a4a; transform: translateX(4px); }
-  .choice-card.selected { border-color: var(--accent); background: #162032; }
+  .choice-card::before {
+    content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(88,166,255,0.1), transparent);
+    transition: left 0.6s ease;
+  }
+  .choice-card:hover {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, #2d3d4a 0%, #273042 100%);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(88,166,255,0.25);
+  }
+  .choice-card:hover::before { left: 100%; }
+  .choice-card.selected {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, #1f4788 0%, #1a3872 100%);
+    box-shadow: 0 8px 24px rgba(88,166,255,0.3);
+  }
   .choice-card .choice-letter {
-    display: inline-block; width: 26px; height: 26px; border-radius: 50%;
-    background: var(--border); color: var(--muted); text-align: center; line-height: 26px;
-    font-size: 0.8em; font-weight: 700; margin-right: 10px; flex-shrink: 0;
+    display: inline-block; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--border); color: var(--muted); text-align: center; line-height: 24px;
+    font-size: 0.75em; font-weight: 700; margin-right: 8px; flex-shrink: 0;
   }
   .choice-card.selected .choice-letter { background: var(--accent); color: #fff; }
-  .choice-card .choice-top { display: flex; align-items: center; }
-  .choice-card .choice-name { font-weight: 600; font-size: 0.95em; }
+  .choice-card .choice-top { 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    width: 100%;
+    gap: 10px;
+  }
+  .choice-card .choice-name-area { 
+    display: flex; 
+    align-items: center; 
+    gap: 6px; 
+    flex: 1; 
+    min-width: 0;
+  }
+  .choice-card .choice-name { 
+    font-weight: 600; 
+    font-size: 0.98em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .choice-card .choice-effects {
     margin-top: 8px; margin-left: 36px;
     display: flex; gap: 8px; flex-wrap: wrap;
   }
   .effect-tag {
-    font-size: 0.78em; padding: 2px 8px; border-radius: 12px;
-    background: #1a1e26;
+    font-size: 0.8em; padding: 3px 8px; border-radius: 12px;
+    background: #1a1e26; transition: all 0.2s ease;
   }
+  .effect-tag:hover { transform: translateY(-2px); }
   .effect-pos { color: var(--green); border: 1px solid #2a4a2a; }
   .effect-neg { color: var(--red); border: 1px solid #4a2020; }
   .effect-neut { color: var(--yellow); border: 1px solid #4a3a00; }
-  .choice-card .knowledge-tag {
-    margin-top: 8px; margin-left: 36px;
-    font-size: 0.78em; color: var(--muted);
-    display: flex; align-items: center; gap: 4px;
-  }
 
   /* Confirm Button */
   .confirm-btn {
-    background: var(--accent); color: #fff; border: none;
-    border-radius: 10px; padding: 14px 32px; font-size: 1em; font-weight: 600;
-    cursor: pointer; transition: all 0.2s; width: 100%; margin-top: 4px;
-    letter-spacing: 0.05em;
+    background: linear-gradient(135deg, var(--accent) 0%, #0084ff 100%);
+    color: #fff; border: none; border-radius: 10px; padding: 14px 32px;
+    font-size: 1em; font-weight: 600; cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    width: 100%; margin-top: 4px; letter-spacing: 0.05em;
+    box-shadow: 0 4px 16px rgba(88,166,255,0.2);
+    position: relative; overflow: hidden;
+  }
+  .confirm-btn::before {
+    content: ''; position: absolute; top: 50%; left: 50%;
+    width: 0; height: 0; border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+  .confirm-btn:not(:disabled):hover {
+    background: linear-gradient(135deg, #79c0ff 0%, #00a8ff 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(88,166,255,0.4);
+  }
+  .confirm-btn:not(:disabled):active::before {
+    width: 300px; height: 300px;
   }
   .confirm-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
-  .confirm-btn:not(:disabled):hover { background: #79c0ff; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(88,166,255,0.3); }
 
-  /* Knowledge Popup */
+  /* Knowledge Popup - Desktop */
   .knowledge-popup {
     position: fixed; bottom: 20px; right: 20px; z-index: 100;
-    background: #1a2744; border: 1px solid #2d4a8a; border-radius: 12px;
-    padding: 16px 20px; max-width: 340px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-    transform: translateY(20px); opacity: 0; transition: all 0.3s;
-    pointer-events: none;
+    background: linear-gradient(135deg, #1a2744 0%, #0f1b2e 100%);
+    border: 1px solid rgba(88,166,255,0.3); border-radius: 12px;
+    padding: 16px 18px; max-width: 380px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(88,166,255,0.1);
+    transform: translateY(20px) scale(0.95); opacity: 0; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none; font-size: 0.95em;
   }
-  .knowledge-popup.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
-  .knowledge-popup .kp-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .knowledge-popup .kp-icon { font-size: 1.2em; }
-  .knowledge-popup .kp-title { font-size: 0.9em; font-weight: 700; color: #79c0ff; }
-  .knowledge-popup .kp-body { font-size: 0.85em; line-height: 1.7; color: var(--text); }
-  .knowledge-popup .kp-jp { font-size: 0.82em; color: var(--muted); margin-top: 6px; font-style: italic; }
-  .knowledge-popup .kp-close { position: absolute; top: 10px; right: 12px; cursor: pointer; color: var(--muted); font-size: 1.1em; }
+  .knowledge-popup.show {
+    transform: translateY(0) scale(1);
+    opacity: 1; pointer-events: auto;
+  }
+  .knowledge-popup .kp-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .knowledge-popup .kp-icon { font-size: 1.3em; }
+  .knowledge-popup .kp-title { font-size: 1em; font-weight: 700; color: #79c0ff; }
+  .knowledge-popup .kp-body { font-size: 0.9em; line-height: 1.7; color: var(--text); margin-bottom: 8px; }
+  .knowledge-popup .kp-jp { font-size: 0.85em; color: var(--muted); margin-top: 8px; font-style: italic; }
+  .knowledge-popup .kp-close { 
+    display: none;
+  }
+  
+  /* Knowledge Info Icon */
+  .knowledge-info-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%; 
+    background: #1f4788; color: #79c0ff; font-size: 0.7em; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+    margin-left: auto; flex-shrink: 0;
+  }
+  .knowledge-info-icon:hover { background: #2d5fa8; transform: scale(1.1); }
+  .knowledge-info-icon.active { background: #00c8ff; }
+  
+  /* Choice Card - with Knowledge Icon */
+  .choice-card .choice-top { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+  .choice-card .choice-name-area { display: flex; align-items: center; gap: 8px; flex: 1; }
+  .choice-card .choice-name { font-weight: 600; font-size: 0.95em; }
+  
+  /* Mobile: Knowledge Popup remains desktop-style, just smaller */
+  @media (max-width: 768px) {
+    .knowledge-popup {
+      position: fixed; bottom: auto; right: auto; left: 50%; top: 50%;
+      transform: translate(-50%, -50%) translateY(20px); 
+      z-index: 999; max-width: 80vw;
+      max-height: 60vh; overflow-y: auto;
+    }
+    .knowledge-popup.show { transform: translate(-50%, -50%) translateY(0); }
+  }
+  .tutorial-popup {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+    z-index: 200; background: #1a2744; border: 2px solid #00c8ff;
+    border-radius: 16px; padding: 32px 24px 24px 24px; max-width: 520px; 
+    max-height: 85vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    display: flex; flex-direction: column;
+  }
+  .tutorial-popup.show { opacity: 1; pointer-events: auto; }
+  
+  /* 弹窗背景遮罩（点击关闭） */
+  .popup-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 199; background: rgba(0,0,0,0.5); opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .popup-overlay.show { opacity: 1; pointer-events: auto; }
+  .tut-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .tut-icon { font-size: 1.8em; flex-shrink: 0; }
+  .tut-title { font-size: 1.2em; font-weight: 700; color: #00c8ff; }
+  .tut-body { font-size: 0.95em; line-height: 1.8; color: var(--text); margin-bottom: 16px; flex: 1; overflow-y: auto; }
+  .tut-body h3 { color: #00c8ff; font-size: 1em; margin: 12px 0 6px 0; }
+  .tut-body p { margin: 8px 0; }
+  .tut-body .stat-item { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 0.9em; }
+  .tut-body .stat-icon { font-size: 1.2em; width: 24px; }
+  .tut-close { 
+    position: fixed; z-index: 210; cursor: pointer; color: var(--muted); font-size: 1.5em;
+    width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; transition: all 0.2s; top: 12px; right: 12px;
+  }
+  .tut-close:hover { color: var(--accent); background: rgba(88,166,255,0.1); }
+  .tut-btn { 
+    width: 100%; padding: 12px; background: linear-gradient(135deg, #00c8ff, #0084ff);
+    border: none; border-radius: 8px; color: #fff; font-size: 1em; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; flex-shrink: 0; margin-top: 12px;
+  }
+  .tut-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,200,255,0.3); }
+  .tut-btn:active { transform: translateY(0); }
+  
+  /* ===== 平板教程（481px - 768px）===== */
+  @media (max-width: 768px) and (min-width: 481px) {
+    .tutorial-popup { 
+      max-width: 85vw; 
+      max-height: 80vh;
+      padding: 28px 18px 16px 18px;
+    }
+    .tut-close { top: 8px; right: 8px; font-size: 1.3em; }
+    .tut-body { font-size: 0.9em; }
+    .tut-btn { padding: 10px; font-size: 0.95em; }
+  }
+  
+  /* ===== 手机教程（≤480px）===== */
+  @media (max-width: 480px) {
+    .tutorial-popup { 
+      width: 100vw; 
+      max-width: 100vw;
+      max-height: 90vh;
+      padding: 18px 6px 6px 6px;
+      border-radius: 0;
+    }
+    .tut-close { top: 4px; right: 4px; font-size: 1.2em; width: 36px; height: 36px; }
+    .tut-header { margin-bottom: 12px; }
+    .tut-icon { font-size: 1.5em; }
+    .tut-title { font-size: 1em; }
+    .tut-body { font-size: 0.85em; margin-bottom: 12px; }
+    .tut-body h3 { font-size: 0.95em; margin: 10px 0 4px 0; }
+    .tut-body p { margin: 6px 0; }
+    .tut-btn { padding: 9px; font-size: 0.9em; margin-top: 10px; }
+  }
+  
+  /* ===== 超小屏教程（≤360px）===== */
+  @media (max-width: 360px) {
+    .tutorial-popup { 
+      max-width: 95vw;
+      max-height: 92vh;
+      padding: 20px 12px 12px 12px;
+    }
+    .tut-close { font-size: 1.1em; width: 32px; height: 32px; }
+    .tut-body { font-size: 0.8em; }
+    .tut-btn { padding: 8px; font-size: 0.85em; }
+  }
+  
+
 
   /* Result overlay */
   #screen-result {
@@ -190,17 +404,96 @@
     align-items: center; justify-content: center;
     flex-direction: column; padding: 40px 20px; text-align: center;
     background: linear-gradient(135deg, #0d1117 0%, #0d2233 100%);
+    animation: fadeIn 0.6s ease-in;
   }
-  .result-icon { font-size: 80px; margin-bottom: 20px; }
-  .result-title { font-size: 2.2em; font-weight: 700; color: var(--accent); margin-bottom: 12px; }
-  .result-desc { color: var(--muted); line-height: 1.8; max-width: 500px; font-size: 1em; margin-bottom: 32px; }
+  .result-icon { font-size: 80px; margin-bottom: 20px; animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .result-title { font-size: 2.2em; font-weight: 700; color: var(--accent); margin-bottom: 12px; animation: slideUp 0.6s ease-out 0.2s backwards; }
+  .result-desc { color: var(--muted); line-height: 1.8; max-width: 500px; font-size: 1em; margin-bottom: 32px; animation: slideUp 0.6s ease-out 0.4s backwards; }
+  
+  @keyframes popIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  /* Knowledge Point Icons & Buttons */
+  .knowledge-info-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: rgba(88,166,255,0.2);
+    border: 1.5px solid rgba(88,166,255,0.4);
+    border-radius: 50%;
+    font-size: 1.1em;
+    cursor: pointer;
+    animation: pulse 2s infinite;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+  }
+
+  .knowledge-info-icon:hover {
+    background: rgba(88,166,255,0.35);
+    border-color: var(--accent);
+    transform: scale(1.15);
+    animation: none;
+    box-shadow: 0 0 12px rgba(88,166,255,0.3);
+  }
+
+  .knowledge-info-icon:active {
+    transform: scale(0.95);
+  }
+
+  /* News Card Knowledge Button */
+  .news-knowledge-btn {
+    background: transparent;
+    border: 1px solid rgba(88,166,255,0.3);
+    color: #58a6ff;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .news-knowledge-btn:hover {
+    background: rgba(88,166,255,0.15);
+    border-color: var(--accent);
+    color: #79c0ff;
+    box-shadow: 0 0 8px rgba(88,166,255,0.2);
+  }
+
+  .news-knowledge-btn:active {
+    transform: scale(0.95);
+  }
   .result-stats {
     display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
     max-width: 620px; margin-bottom: 32px; width: 100%;
+    animation: slideUp 0.6s ease-out 0.6s backwards;
   }
   .result-stat-item {
-    background: var(--card-bg); border: 1px solid var(--border);
-    border-radius: 10px; padding: 14px 8px; text-align: center;
+    background: linear-gradient(135deg, #1f2a3a 0%, #1a2a42 100%);
+    border: 1px solid rgba(88,166,255,0.2);
+    border-radius: 12px; padding: 16px 12px; text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+  }
+  .result-stat-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(88,166,255,0.2);
+    border-color: rgba(88,166,255,0.4);
   }
   .result-stat-item .rs-icon { font-size: 1.4em; margin-bottom: 6px; }
   .result-stat-item .rs-name { font-size: 0.75em; color: var(--muted); margin-bottom: 4px; }
@@ -231,19 +524,533 @@
 
   /* Misc */
   .btn-primary {
-    background: var(--accent); color: #fff; border: none;
-    border-radius: 10px; padding: 14px 48px; font-size: 1.05em; font-weight: 600;
-    cursor: pointer; transition: all 0.2s; letter-spacing: 0.05em;
+    background: linear-gradient(135deg, var(--accent) 0%, #0084ff 100%);
+    color: #fff; border: none; border-radius: 10px;
+    padding: 14px 48px; font-size: 1.05em; font-weight: 600;
+    cursor: pointer; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    letter-spacing: 0.05em; box-shadow: 0 4px 16px rgba(88,166,255,0.25);
+    position: relative; overflow: hidden;
   }
-  .btn-primary:hover { background: #79c0ff; transform: translateY(-2px); box-shadow: 0 6px 24px rgba(88,166,255,0.35); }
+  .btn-primary::before {
+    content: ''; position: absolute; top: 50%; left: 50%;
+    width: 0; height: 0; border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #79c0ff 0%, #00a8ff 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(88,166,255,0.4);
+  }
+  .btn-primary:active::before {
+    width: 300px; height: 300px;
+  }
   
   .mobile-note { color: var(--muted); font-size: 0.8em; margin-top: 16px; }
 
+  /* ===== TABLET (768px 及以下) ===== */
+  @media (max-width: 768px) {
+    body { overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+    
+    /* Title screen */
+    #screen-title { padding: 24px 16px; }
+    #screen-title .logo { font-size: 52px; }
+    #screen-title h1 { font-size: 2em; line-height: 1.2; }
+    #screen-title .subtitle { font-size: 1em; }
+    #screen-title .desc { font-size: 0.95em; line-height: 1.9; margin-bottom: 32px; }
+    .eju-tag { padding: 6px 16px; font-size: 0.9em; }
+    .diff-grid { gap: 10px; margin-bottom: 24px; }
+    .diff-card { 
+      min-width: 110px; 
+      padding: 16px 12px; 
+      min-height: 56px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .diff-card .diff-icon { font-size: 32px; margin-bottom: 8px; }
+    .diff-card .diff-name { font-size: 0.95em; }
+    .diff-card .diff-desc { font-size: 0.75em; line-height: 1.3; }
+    
+    /* Start button */
+    .btn-primary { 
+      padding: 16px 40px; 
+      font-size: 1em;
+      min-height: 56px;
+    }
+    .mobile-note { font-size: 0.85em; }
+    
+    /* Game screen */
+    #screen-game { 
+      padding: 14px 10px; 
+      gap: 14px; 
+      padding-bottom: 24px;
+    }
+    
+    /* Header & stats - COMPACT */
+    .game-header { 
+      flex-direction: column; 
+      gap: 10px; 
+      align-items: flex-start; 
+      padding: 12px;
+    }
+    .game-header h2 { font-size: 1em; }
+    .stats-grid { display: flex; flex-direction: column; gap: 6px; }
+    .stat-item { 
+      padding: 0; 
+      background: transparent;
+      border-radius: 0;
+      min-height: auto;
+      gap: 6px;
+    }
+    .stat-label { margin-bottom: 0; }
+    .stat-name { font-size: 0.75em; }
+    .stat-val { font-size: 0; display: none; }
+    .stat-bar { height: 5px; }
+    .stat-delta { font-size: 0.7em; }
+    
+    /* News card */
+    .news-card { 
+      padding: 12px; 
+      margin-bottom: 8px; 
+      border-radius: 12px;
+    }
+    .news-header { gap: 10px; }
+    .news-icon { font-size: 1.5em; }
+    .news-title { font-size: 0.95em; }
+    .news-body { 
+      font-size: 0.9em; 
+      line-height: 1.7;
+      margin-bottom: 10px;
+    }
+    .news-impact { 
+      padding: 10px 12px;
+      font-size: 0.8em;
+      border-radius: 8px;
+    }
+    .news-hint { 
+      font-size: 0.75em; 
+      margin-top: 8px;
+      padding-top: 8px;
+    }
+    
+    /* Choice section - CRITICAL */
+    .choice-section { 
+      padding: 12px; 
+      position: relative;
+      z-index: 1;
+      border-radius: 12px;
+    }
+    .choice-section h3 { 
+      font-size: 0.85em; 
+      margin-bottom: 10px;
+    }
+    .choice-grid { gap: 8px; }
+    
+    /* Choice card - ENHANCED TOUCH TARGETS */
+    .choice-card {
+      padding: 12px 12px; 
+      min-height: 50px;
+      display: flex; 
+      align-items: center;
+      border-radius: 10px;
+      flex-wrap: wrap;
+    }
+    .choice-card .choice-letter {
+      width: 28px; 
+      height: 28px; 
+      font-size: 0.8em;
+      line-height: 28px;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+    .choice-card .choice-top { 
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .choice-card .choice-name-area { 
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+    }
+    .choice-card .choice-name { 
+      font-size: 0.9em; 
+      font-weight: 600;
+    }
+    .choice-card .choice-effects { 
+      margin-left: 38px; 
+      margin-top: 6px;
+      gap: 6px;
+      width: calc(100% - 38px);
+    }
+    .effect-tag { 
+      font-size: 0.75em; 
+      padding: 2px 6px;
+    }
+    
+    /* Confirm button - ALWAYS VISIBLE & ACCESSIBLE */
+    .confirm-btn {
+      padding: 14px 20px; 
+      font-size: 0.95em;
+      font-weight: 700;
+      margin-top: 10px;
+      position: sticky;
+      bottom: 0;
+      background: var(--accent);
+      z-index: 10;
+      box-shadow: 0 -4px 16px rgba(88,166,255,0.4);
+      border-radius: 10px;
+      min-height: 50px;
+      width: 100%;
+    }
+    .confirm-btn:not(:disabled) { 
+      background: var(--accent);
+      cursor: pointer;
+    }
+    .confirm-btn:disabled {
+      background: var(--border);
+      cursor: not-allowed;
+    }
+    
+    /* Result screen */
+    #screen-result { 
+      padding: 24px 14px; 
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .result-icon { font-size: 70px; margin-bottom: 20px; }
+    .result-title { 
+      font-size: 1.8em; 
+      margin-bottom: 12px;
+    }
+    .result-desc { 
+      font-size: 0.95em; 
+      line-height: 1.8;
+      margin-bottom: 28px;
+    }
+    .result-stats { 
+      grid-template-columns: repeat(2, 1fr); 
+      gap: 10px;
+      max-width: 100%;
+    }
+    .result-stat-item {
+      padding: 12px 8px;
+      border-radius: 10px;
+    }
+    .result-stat-item .rs-icon { font-size: 1.5em; }
+    .result-stat-item .rs-name { font-size: 0.8em; }
+    .result-stat-item .rs-val { font-size: 1.2em; }
+    .knowledge-summary { 
+      padding: 16px; 
+      margin-bottom: 28px;
+      max-width: 100%;
+    }
+    .knowledge-summary h3 { font-size: 0.95em; margin-bottom: 14px; }
+    .kl-item { 
+      font-size: 0.85em; 
+      padding: 10px 0;
+    }
+    .kl-item .kl-badge { font-size: 0.75em; padding: 3px 8px; }
+    .replay-btn {
+      padding: 14px 32px;
+      font-size: 1em;
+      min-height: 56px;
+      border-radius: 10px;
+    }
+
+    /* Tutorial popup mobile */
+    .tutorial-popup { 
+      max-width: 90vw; 
+      max-height: 85vh; 
+      overflow-y: auto;
+      padding: 20px;
+      border-radius: 16px;
+    }
+    .tut-header { gap: 12px; }
+    .tut-icon { font-size: 1.8em; }
+    .tut-title { font-size: 1.2em; }
+    .tut-body { 
+      font-size: 0.95em; 
+      line-height: 1.8;
+      margin-bottom: 16px;
+    }
+    .tut-body h3 { font-size: 1em; margin: 12px 0 8px 0; }
+    .tut-close { font-size: 1.3em; }
+    .tut-btn { 
+      padding: 14px;
+      font-size: 1em;
+      min-height: 56px;
+    }
+
+    /* Knowledge popup mobile - SMOOTH DRAWER */
+    .knowledge-popup .kp-close { 
+      top: 12px; 
+      right: 12px; 
+      font-size: 1.1em; 
+      width: 32px; 
+      height: 32px;
+    }
+  }
+  
+  /* ===== SMALL PHONE (480px - 768px) ===== */
   @media (max-width: 600px) {
-    .stats-grid { grid-template-columns: 1fr; }
-    .result-stats { grid-template-columns: repeat(3, 1fr); }
-    #screen-game { padding: 12px; }
-    .game-header { flex-direction: column; gap: 10px; align-items: flex-start; }
+    #screen-title h1 { font-size: 1.7em; }
+    #screen-title .desc { font-size: 0.9em; }
+    .diff-grid { gap: 8px; }
+    .diff-card { 
+      min-width: 100px;
+      padding: 12px 10px;
+      font-size: 0.85em;
+    }
+    
+    #screen-game { 
+      padding: 12px 8px;
+      gap: 12px;
+    }
+    
+    .game-header { padding: 12px; }
+    .stat-item { padding: 10px; min-height: 44px; }
+    .stat-name { font-size: 0.8em; }
+    .stat-val { font-size: 0.95em; }
+    .stat-bar { height: 8px; }
+    
+    .news-card { padding: 14px; }
+    .news-title { font-size: 1em; }
+    .news-body { font-size: 0.9em; }
+    
+    .choice-section { padding: 14px; }
+    .choice-card { 
+      padding: 12px 14px;
+      min-height: 52px;
+    }
+    .choice-card .choice-letter { 
+      width: 30px; 
+      height: 30px;
+      line-height: 30px;
+      margin-right: 10px;
+    }
+    .choice-card .choice-name { font-size: 0.9em; }
+    .choice-card .choice-effects { margin-left: 40px; }
+    
+    .confirm-btn { 
+      padding: 16px 20px;
+      font-size: 0.95em;
+      min-height: 52px;
+    }
+  }
+  
+  /* ===== EXTRA SMALL PHONE (≤ 480px) ===== */
+  @media (max-width: 480px) {
+    html { font-size: 14px; }
+    
+    #screen-title .logo { font-size: 44px; }
+    #screen-title h1 { 
+      font-size: 1.5em; 
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+    #screen-title .subtitle { font-size: 0.9em; }
+    #screen-title .desc { 
+      font-size: 0.85em; 
+      line-height: 1.8;
+      max-width: 90vw;
+    }
+    .diff-grid { gap: 6px; margin-bottom: 16px; }
+    .diff-card { 
+      min-width: 85px;
+      padding: 10px 8px; 
+      font-size: 0.8em;
+      min-height: 48px;
+    }
+    .diff-card .diff-icon { font-size: 24px; margin-bottom: 4px; }
+    .btn-primary { 
+      padding: 14px 28px;
+      font-size: 0.95em;
+    }
+    
+    #screen-game { 
+      padding: 10px 8px;
+      gap: 10px;
+      padding-bottom: 20px;
+    }
+    
+    .game-header { 
+      padding: 10px;
+      gap: 8px;
+    }
+    .game-header h2 { font-size: 0.95em; }
+    .year-dot { width: 20px; height: 20px; font-size: 0.6em; }
+    
+    .stats-panel h3 { font-size: 0.92em; }
+    .stat-item { 
+      padding: 0;
+      min-height: auto;
+    }
+    .stat-name { font-size: 0.88em; }
+    .stat-val { font-size: 0; display: none; }
+    .stat-bar { height: 6px; }
+    
+    .news-card { 
+      padding: 14px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+    .news-header { gap: 10px; }
+    .news-icon { font-size: 1.6em; }
+    .news-title { font-size: 1.05em; }
+    .news-body { 
+      font-size: 1em;
+      line-height: 1.8;
+      margin-bottom: 12px;
+    }
+    .news-impact { 
+      padding: 10px 12px;
+      font-size: 0.9em;
+    }
+    .news-hint { font-size: 0.88em; }
+    
+    .choice-section { 
+      padding: 14px;
+      border-radius: 12px;
+    }
+    .choice-section h3 { 
+      font-size: 0.92em;
+      margin-bottom: 10px;
+    }
+    .choice-grid { gap: 8px; }
+    
+    .choice-card { 
+      padding: 12px 12px;
+      min-height: 52px;
+      gap: 6px;
+    }
+    .choice-card .choice-letter { 
+      width: 28px; 
+      height: 28px;
+      font-size: 0.85em;
+      line-height: 28px;
+      margin-right: 10px;
+    }
+    .choice-card .choice-name { 
+      font-size: 1em;
+    }
+    .choice-card .choice-effects{
+      margin-left: 38px;
+      margin-top: 6px;
+      gap: 6px;
+    }
+    .effect-tag { 
+      font-size: 0.85em;
+      padding: 3px 7px;
+    }
+    
+    .confirm-btn {
+      padding: 14px;
+      font-size: 0.95em;
+      min-height: 50px;
+      margin-top: 10px;
+    }
+    
+    /* Result screen extra small */
+    #screen-result {
+      padding: 12px 8px;
+    }
+    .result-icon { 
+      font-size: 50px; 
+      margin-bottom: 10px;
+    }
+    .result-title { 
+      font-size: 1.3em;
+      margin-bottom: 8px;
+    }
+    .result-desc { 
+      font-size: 0.8em;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .result-stats {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+    }
+    .result-stat-item { padding: 8px 4px; }
+    .result-stat-item .rs-icon { font-size: 1.2em; }
+    .result-stat-item .rs-name { font-size: 0.65em; }
+    
+    .knowledge-summary {
+      padding: 10px;
+      margin-bottom: 16px;
+    }
+    .knowledge-summary h3 { font-size: 0.8em; }
+    .kl-item { 
+      font-size: 0.7em;
+      padding: 6px 0;
+    }
+    .replay-btn {
+      padding: 10px 20px;
+      font-size: 0.85em;
+      min-height: 44px;
+    }
+  }
+
+  /* ===== ULTRA SMALL (360px 及以下) ===== */
+  @media (max-width: 360px) {
+    html { font-size: 13px; }
+    
+    #screen-title .logo { font-size: 40px; }
+    #screen-title h1 { 
+      font-size: 1.3em;
+      margin-bottom: 4px;
+    }
+    #screen-title { padding: 16px 10px; }
+    
+    .diff-grid { gap: 4px; margin-bottom: 12px; }
+    .diff-card { 
+      min-width: 75px;
+      padding: 8px 6px;
+      font-size: 0.75em;
+      min-height: 44px;
+    }
+    .btn-primary { 
+      padding: 12px 20px;
+      font-size: 0.85em;
+    }
+    
+    #screen-game { 
+      padding: 8px 4px;
+      gap: 8px;
+    }
+    
+    .news-card { padding: 10px; }
+    .news-body { font-size: 0.8em; }
+    
+    .choice-card { 
+      padding: 8px 10px;
+      min-height: 44px;
+    }
+    .choice-card .choice-letter { 
+      width: 26px;
+      height: 26px;
+      line-height: 26px;
+      margin-right: 6px;
+      font-size: 0.7em;
+    }
+    .confirm-btn {
+      padding: 12px 12px;
+      font-size: 0.85em;
+      min-height: 44px;
+    }
+    
+    .tutorial-popup { 
+      padding: 16px;
+      max-width: 95vw;
+    }
   }
 </style>
 </head>
@@ -257,7 +1064,7 @@
   <div class="eju-tag">📚 EJU 文综经济 × 模拟游戏</div>
   <p class="desc">
     你刚刚当选了一个小岛国家的首相。<br>
-    接下来的4年（4个回合），你的每一项政策决定<br>
+    接下来的6年（6个回合），你的每一项政策决定<br>
     都将影响通货膨胀、汇率、税收与国民满意度。<br>
     <br>
     <em>把国家带向繁荣，还是推进深渊——取决于你。</em>
@@ -291,8 +1098,7 @@
   <!-- Header -->
   <div class="game-header">
     <div class="title-area">
-      <h2>🏛️ 国家经营者</h2>
-      <div class="year-text" id="year-text">第1届任期</div>
+      <div class="year-text" id="year-text" style="font-size: 0.9em; font-weight: 600; color: var(--accent);">第1届任期 / 共6届</div>
     </div>
     <div class="year-indicator" id="year-dots"></div>
   </div>
@@ -305,9 +1111,12 @@
 
   <!-- News -->
   <div class="news-card fade-in" id="news-card">
-    <div class="news-header">
-      <div class="news-icon" id="news-icon">📰</div>
-      <div class="news-title" id="news-title">年度新闻简报</div>
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px;">
+      <div class="news-header">
+        <div class="news-icon" id="news-icon">📰</div>
+        <div class="news-title" id="news-title">年度新闻简报</div>
+      </div>
+      <button class="news-knowledge-btn" id="news-knowledge-btn" onclick="event.stopPropagation(); showKnowledgeFromNews()" title="查看这条新闻的背景知识">📖</button>
     </div>
     <div class="news-body" id="news-body"></div>
     <div class="news-impact" id="news-impact"></div>
@@ -334,6 +1143,20 @@
     <div id="knowledge-list"></div>
   </div>
   <button class="replay-btn" onclick="replayGame()">🔄 再来一局</button>
+</div>
+
+<!-- Popup Overlay (for closing popups by clicking background) -->
+<div class="popup-overlay" id="overlay" onclick="closeTutorial(); closeKnowledge();"></div>
+
+<!-- Tutorial Popup -->
+<div class="tutorial-popup" id="tutorial">
+  <span class="tut-close" onclick="closeTutorial()">✕</span>
+  <div class="tut-header">
+    <span class="tut-icon">📚</span>
+    <span class="tut-title">游戏规则</span>
+  </div>
+  <div class="tut-body" id="tut-body"></div>
+  <button class="tut-btn" onclick="closeTutorial()">我已了解 →</button>
 </div>
 
 <!-- Knowledge Popup -->
@@ -369,6 +1192,29 @@ const KNOWLEDGE = {
   deflation: { name: 'デフレスパイラル', jp: 'デフレ・流動性の罠', body: '物价下跌→企业收入减少→裁员减薪→消费更少→物价继续下跌……这个恶性循环称为"通缩螺旋"。日本在1990年代后长期面临这一问题。' },
   bubble: { name: 'バブル経済と崩壊', jp: '資産バブル・不況・景気循環', body: '资产价格脱离实际价值大幅上涨形成"泡沫"。泡沫破裂时，资产缩水、信贷收紧，经济急速衰退。日本1991年的泡沫经济崩溃是教科书级别的案例。' },
   fx_reserve: { name: '外貨準備と為替介入', jp: '国際収支・為替市場介入', body: '外汇储备是国家抵御汇率冲击的"弹药"。当本币贬值压力过大时，央行可抛售美元买入本币进行干预，但储备告急时干预能力会大幅下降。' },
+  // 新增：日本央行四大工具
+  omo_sell: { name: '売りオペレーション', jp: '公開市場操作・マネタリーベース縮小', body: '央行向市场卖出国债，收回现金流动性。这会减少市场上的钱，压低物价，强化本币升值。是对抗通胀的强力工具，但会制约经济增长。' },
+  omo_buy: { name: '買いオペレーション', jp: '公開市場操作・量的緩和・マネタリーベース', body: '央行从市场买入国债，向市场注入现金。这会增加流动性，刺激企业贷款和投资，推高GDP。是量化宽松的核心工具，日本央行长期使用。' },
+  reserve_up: { name: '準備率引き上げ', jp: '準備率操作・流動性調整・信用収縮', body: '央行提高商业银行必须在央行存放的准备金比率。这会减少银行可用于放贷的资金，是最激进的紧缩工具。日本央行很少使用，因为容易引发金融紧张。' },
+  reserve_down: { name: '準備率引き下げ', jp: '準備率操作・信用拡大・流動性供給', body: '央行降低商业银行的准备金比率要求。这让银行有更多钱可以放贷，刺激经济。与买入国债效果相似，但作用机制不同。' },
+  discount_up: { name: '公定歩合引き上げ', jp: '公定歩合・金融引き締め・政策金利', body: '央行提高向商业银行的贷款利率（贴现率）。银行从央行借钱变贵了，会导致银行也提高市场利率。这是比降息温和一些的紧缩工具。' },
+  discount_down: { name: '公定歩合引き下げ', jp: '公定歩合・金融緩和・景気刺激', body: '央行降低向商业银行的贷款利率。鼓励银行从央行借钱，进而向市场投放更多信贷。这是长期的温和宽松工具。' },
+  market_rate_up: { name: '市場金利引き上げ', jp: '金利上昇・マネタリー政策・デマンド抑制', body: '央行通过多种工具组合（提高贴现率、卖出国债等）推高市场利率。人们更愿意存钱而不是消费，消费和投资下降，是对抗高通胀的"王炸"。' },
+  market_rate_down: { name: '市場金利引き下げ', jp: '金利低下・ゼロ金利政策・流動性の罠', body: '央行推低市场利率，鼓励借贷和投资。但当利率已经接近零时，继续降息效果有限，可能陷入"流动性陷阱"。日本已维持超低利率20多年。' },
+  // 历史事件知识点补充
+  meiji_modernization: { name: '明治維新と産業化', jp: '富国強兵・殖産興業・近代化改革', body: '明治维新（1868年）后，日本学习西方技术，推行"殖产兴业"政策，建设现代工业。茶和生丝出口成为主要外汇来源，为日本工业化积累了资本。' },
+  industrial_base: { name: '重工業化と国力強化', jp: '八幡製鐵所・重工業・産業革命', body: '1880-1900年代，日本建设官营工厂（如八幡制铁所），建立重工业基础。这标志着日本从农业社会向工业社会转变，也为军事工业化奠定基础。' },
+  wartime_economy: { name: '戦時経済と軍事産業', jp: '一次大戦好況・軍需産業・輸出増加', body: '一战（1914-1918）期间，日本作为中立国，成为欧洲战争物资的主要供应者。造船、钢铁、化学等产业飞速发展，经历"大正景气"。' },
+  postwar_slump: { name: '戦後不況と経済危機', jp: '不況・失業・農村困窮・米騒動', body: '一战结束后，日本经济从战争景气急速下落。订单取消、失业激增、农业蕭条，引发社会矛盾。这是日本第一次战后调整的痛苦过程。' },
+  great_depression: { name: '世界大恐慌と日本経済', jp: '1929年大蕭條・デフレ・金本位制', body: '1929年华尔街股市崩盘引发世界大萧条。日本农产品和出口产业受到重创。许多国家放弃金本位制，日本在1931年宣布金本位制解禁，利用円贬值促进出口恢复。' },
+  postwar_reforms: { name: '戦後民主化と経済改革', jp: '占領政策・財閥解散・農地改革・労働法制', body: '二战后，占领军推行民主化改革：解散财阀、实施农地改革、制定劳动法。这是日本战后经济重组的基础，也树立了现代竞争市场框架。' },
+  korean_war_recovery: { name: '朝鲮戦争とリバイバル', jp: '朝鮮特需・軍需産業・経済復興・輸出増加', body: '1950-1952年朝鲜战争期间，日本成为美军后勤基地，获得大量军需订单。这为日本经济复苏注入强心针，失业率大幅下降，标志着战后复兴进入高速发展期。' },
+  high_growth_era: { name: '高度経済成長期', jp: '所得倍増計画・オリンピック・新幹線・高成長', body: '1956年后，日本进入"高度经济成长期"（平均GDP增长9%以上）。政府推出"国民所得倍增计划"，投资基础设施（新幹线、高速公路）。1964年东京奥运会成为象征，日本跻身发达国家行列。' },
+  yen_revaluation: { name: 'ドルショック・変動相場制移行', jp: '1971年・ブレトンウッズ体制崩壊・円升値・金融市場', body: '1971年尼克松宣布停止美元与黄金兑换，布雷顿森林体系崩溃。固定汇率制向浮动汇率制转变，日本面临円升值压力。许多出口企业竞争力被削弱，引发了日本列岛改造计划等内需刺激政策。' },
+  oil_shock: { name: '第一次石油危機', jp: '1973年・オイルショック・スタグフレーション・エネルギー危機', body: '1973年中东战争引发石油禁运，国际油价暴涨400%。日本严重依赖进口石油，能源成本激增，生产成本飙升。同时面临失业和通胀并存的"滞胀"困局。日本通过能源节约和产业升级成功度过危机。' },
+  bubble_peak: { name: 'バブル経済のピーク', jp: '1985年プラザ合意・低金利・資産バブル・株価暴騰', body: '广场协议后，日本成为全球资金流入地。央行实施超宽松政策，房地产和股票价格暴涨。股市和地产成为主要投资对象，形成巨大泡沫。1989年日经指数达到历史高位38957点。' },
+  bubble_burst: { name: 'バブル崩壊と失われた10年', jp: '1990年代・デフレスパイラル・不良債権・金融危機', body: '1989年央行急速加息，泡沫破裂。股市和地产价格暴跌，银行积累大量不良债权，企业和家庭资产缩水。日本进入长期通缩和停滞，形成"失落十年"（1990-2000年代初）。' },
+  abenomics_reform: { name: 'アベノミクスと経済再生', jp: '2012年・三本の矢・マイナス金利・量的緩和・デフレ脱却', body: '安倍晋三执政后推出"三支箭"政策：大胆的货币宽松、灵活的财政政策、结构改革。央行实施超宽松政策甚至负利率，试图摆脱长期通缩。虽然成效有限，但逐步推高物价和工资。' },
 };
 
 const EVENTS = [
@@ -399,13 +1245,13 @@ const EVENTS = [
   {
     id: 'bubble', icon: '💥', title: '科技泡沫骤然破裂',
     body: '持续3年的科技股热潮戛然而止，股市单日暴跌30%，企业投资信心崩溃，消费急剧萎缩。',
-    impact: { gdp: -15, happy: -8 },
-    impactText: 'GDP成长率 -15，民众满意度 -8',
+    impact: { gdp: -12, happy: -6 },
+    impactText: 'GDP成长率 -12，民众满意度 -6',
     knowledgeKey: 'bubble',
     choices: [
-      { letter: 'A', name: '紧急推出大规模公共投资', effects: { gdp: 12, debt: 16, happy: 6 }, effectLabels: ['GDP +12','国债压力 +16','民满 +6'], knowledgeKey: 'pub_invest', remark: '凯恩斯式救市，代价是国债' },
-      { letter: 'B', name: '央行紧急降息，刺激信贷', effects: { gdp: 8, cpi: 10, fx: -6 }, effectLabels: ['GDP +8','物价 +10','汇率 -6'], knowledgeKey: 'low_rate', remark: '货币宽松，注意通胀副作用' },
-      { letter: 'C', name: '静观其变，相信市场自愈', effects: { gdp: -5, happy: -5 }, effectLabels: ['GDP -5','民满 -5'], knowledgeKey: 'gdp', remark: '不干预有风险，但不增加债务' },
+      { letter: 'A', name: '紧急推出大规模公共投资', effects: { gdp: 16, debt: 20, happy: 8 }, effectLabels: ['GDP +16','国债压力 +20','民满 +8'], knowledgeKey: 'pub_invest', remark: '凯恩斯式救市，代价是国债' },
+      { letter: 'B', name: '央行紧急降息，刺激信贷', effects: { gdp: 10, cpi: 12, fx: -8 }, effectLabels: ['GDP +10','物价 +12','汇率 -8'], knowledgeKey: 'low_rate', remark: '货币宽松，注意通胀副作用' },
+      { letter: 'C', name: '静观其变，相信市场自愈', effects: { gdp: -8, happy: -10 }, effectLabels: ['GDP -8','民满 -10'], knowledgeKey: 'gdp', remark: '不干预有风险，但不增加债务' },
     ]
   },
   {
@@ -444,6 +1290,212 @@ const EVENTS = [
       { letter: 'C', name: '召开记者会强调经济基本面良好', effects: { happy: 3 }, effectLabels: ['民满 +3'], knowledgeKey: 'debt', remark: '不解决根本问题，危机继续累积' },
     ]
   },
+  // ===== 新增四大货币政策事件 =====
+  {
+    id: 'reserve_crisis', icon: '🏦', title: '準備金不足警告',
+    body: '央行发布报告：商业银行的准备金水位跌至历史低位！银行可用于放贷的资金已接近极限，市场开始担心信贷紧张会导致企业融资困难。',
+    impact: { gdp: -8, fx: -5 },
+    impactText: 'GDP成长率 -8，汇率稳定度 -5',
+    knowledgeKey: 'reserve_down',
+    choices: [
+      { letter: 'A', name: '央行迅速降低準備率', effects: { gdp: 8, cpi: 4, debt: 2 }, effectLabels: ['GDP +8','物价 +4','国债 +2'], knowledgeKey: 'reserve_down', remark: '解除紧张局面，企业融资恢复' },
+      { letter: 'B', name: '央行提高貼現率吸引銀行存款', effects: { cpi: -6, gdp: -4, happy: -5 }, effectLabels: ['物价 -6','GDP -4','民满 -5'], knowledgeKey: 'discount_up', remark: '激励银行存钱，但经济继续冷却' },
+      { letter: 'C', name: '发表声明称一切正常，市场无需担心', effects: { gdp: -3, fx: -3 }, effectLabels: ['GDP -3','汇率 -3'], knowledgeKey: 'debt', remark: '市场不信任，企业继续勒紧裤腰带' },
+    ]
+  },
+  {
+    id: 'hyperinflation', icon: '📈', title: '物價暴漲通胀警告',
+    body: '物价指数飙升！一个月内物价上涨6%，面包、汽油、电费全线上升。民众抱怨生活成本飙升，街头开始出现抗议声浪。央行必须立刻出手。',
+    impact: { cpi: 16, happy: -10 },
+    impactText: '物价指数 +16，民众满意度 -10',
+    knowledgeKey: 'market_rate_up',
+    choices: [
+      { letter: 'A', name: '激進对策：市场金利大幅上升+央行売りオペ', effects: { cpi: -22, gdp: -15, happy: 10 }, effectLabels: ['物价 -22','GDP -15','民满 +10'], knowledgeKey: 'market_rate_up', remark: '"王炸"政策，快速压制通胀，但经济陷入衰退' },
+      { letter: 'B', name: '温和对策：提高貼現率', effects: { cpi: -10, gdp: -6, happy: 3 }, effectLabels: ['物价 -10','GDP -6','民满 +3'], knowledgeKey: 'discount_up', remark: '效果有限，通胀仍继续' },
+      { letter: 'C', name: '不干预，相信市场自我调整', effects: { cpi: 12, gdp: -10, happy: -10 }, effectLabels: ['物价 +12','GDP -10','民满 -10'], knowledgeKey: 'cpi', remark: '通胀继续恶化，很快陷入危机' },
+    ]
+  },
+  {
+    id: 'liquidity_trap', icon: '🌊', title: '流動性の罠（流动性陷阱）警险',
+    body: '央行已将利率降至历史低位，但企业和消费者仍然不愿借钱。投资冻结，消费停滞，经济陷入"流动性陷阱"——钱再便宜也没人借。',
+    impact: { gdp: -10, cpi: -8 },
+    impactText: 'GDP成长率 -10，物价指数 -8（通缩风险）',
+    knowledgeKey: 'market_rate_down',
+    choices: [
+      { letter: 'A', name: '激進的量化寬鬆：央行大規模買入國債', effects: { gdp: 12, cpi: 8, debt: 10 }, effectLabels: ['GDP +12','物价 +8','国债 +10'], knowledgeKey: 'omo_buy', remark: '日本央行的标志性政策，虽然效果有限但必须尝试' },
+      { letter: 'B', name: '降低準備率激励银行放贷', effects: { gdp: 9, cpi: 4, debt: 3 }, effectLabels: ['GDP +9','物价 +4','国债 +3'], knowledgeKey: 'reserve_down', remark: '迂回的宽松手段，比直接QE温和' },
+      { letter: 'C', name: '放弃货币政策，全力依赖财政刺激', effects: { gdp: 11, debt: 18, happy: 8 }, effectLabels: ['GDP +11','国债 +18','民满 +8'], knowledgeKey: 'pub_invest', remark: '當利率已近零，只有財政政策能救场' },
+    ]
+  },
+  {
+    id: 'balance_sheet', icon: '⚡', title: '央行資産膨脹危机',
+    body: '经过多年量化宽松，央行资产负债表已膨胀到GDP的50%！持有的国债面临减值风险。市场开始质疑央行的财务稳健性，信心动摇。',
+    impact: { fx: -12, debt: 10 },
+    impactText: '汇率稳定度 -12，国债压力 +10',
+    knowledgeKey: 'omo_buy',
+    choices: [
+      { letter: 'A', name: '逐步缩减（Tapering）：逐步减少买入', effects: { debt: -6, gdp: -5, fx: 8 }, effectLabels: ['国债 -6','GDP -5','汇率 +8'], knowledgeKey: 'omo_buy', remark: '信心恢复，但经济面临"縮減恐慌"' },
+      { letter: 'B', name: '继续量化宽松，相信规模经济', effects: { gdp: 5, debt: 12, fx: -8 }, effectLabels: ['GDP +5','国债 +12','汇率 -8'], knowledgeKey: 'omo_buy', remark: '风险很大，如同赌博，但短期能稳住经济' },
+      { letter: 'C', name: '央行资产担保证券化，分散风险', effects: { debt: 4, fx: 2, happy: 2 }, effectLabels: ['国债 +4','汇率 +2','民满 +2'], knowledgeKey: 'qe', remark: '金融创新手段，理论上可行但实施复杂' },
+    ]
+  },
+  // ===== 新增15个日本经济史事件（基于真实历史） =====
+  {
+    id: 'meiji_trade', icon: '🚢', title: '明治維新後貿易港開放',
+    body: '明治维新後，日本陆续开放横滨、长崎、箱館等五個貿易港。海外貿易不斷擴大，但日本與西方列強簽訂的是不平等條約，承受著關稅主權喪失的打擊。',
+    impact: { gdp: 6, fx: -4 },
+    impactText: 'GDP成長 +6，汇率穩定度 -4',
+    knowledgeKey: 'meiji_modernization',
+    choices: [
+      { letter: 'A', name: '積極推動茶和生絲出口', effects: { gdp: 8, cpi: -3, debt: 2 }, effectLabels: ['GDP +8','物价 -3','国债 +2'], knowledgeKey: 'export', remark: '戰前最大出口商品，外匯收入增加' },
+      { letter: 'B', name: '加强工业品贸易，抵抗西方商品', effects: { gdp: 4, debt: 6, happy: -2 }, effectLabels: ['GDP +4','国债 +6','民满 -2'], knowledgeKey: 'pub_invest', remark: '需要龐大投資，但國內工業競爭力弱' },
+      { letter: 'C', name: '向西方学习，引进外资建厂', effects: { gdp: 10, debt: 10, fx: 2 }, effectLabels: ['GDP +10','国债 +10','汇率 +2'], knowledgeKey: 'pub_invest', remark: '技術進步快，但外資獲利外流' },
+    ]
+  },
+  {
+    id: 'industrial_revolution', icon: '🏭', title: '日本產業革命時期（1880-1900）',
+    body: '日本开始引进西方工业技術。富岡製絲場、八幡製鐵所等官營工廠陸續建成。重工業、輕工業兩大支柱産業开始形成。',
+    impact: { gdp: 10, debt: 12 },
+    impactText: 'GDP成長 +10，国债压力 +12',
+    knowledgeKey: 'industrial_base',
+    choices: [
+      { letter: 'A', name: '政府主导重工业优先战略', effects: { gdp: 12, debt: 16, cpi: 5 }, effectLabels: ['GDP +12','国债 +16','物价 +5'], knowledgeKey: 'pub_invest', remark: '日本工业化的正确选择，但财政压力大' },
+      { letter: 'B', name: '鼓励民间企业竞争，减少政府干预', effects: { gdp: 8, debt: 4, happy: 5 }, effectLabels: ['GDP +8','国债 +4','民满 +5'], knowledgeKey: 'qe', remark: '民间效率高，但技術進步缓慢' },
+      { letter: 'C', name: '平衡重轻工业，多元化发展', effects: { gdp: 9, debt: 8, cpi: 3 }, effectLabels: ['GDP +9','国债 +8','物价 +3'], knowledgeKey: 'export', remark: '风险分散，但资源分散效率不高' },
+    ]
+  },
+  {
+    id: 'taishō_bubble', icon: '🎉', title: '大正景氣（一戰景氣）1914-1920',
+    body: '一次世界大戰爆發，歐洲工業受戰火影響。日本作為中立國，承接歐洲訂單，出口激增。造船業、鋼鐵業、化學工業飛速發展。',
+    impact: { gdp: 14, cpi: 8, happy: 8 },
+    impactText: 'GDP +14，物价指数 +8，民众满意度 +8',
+    knowledgeKey: 'wartime_economy',
+    choices: [
+      { letter: 'A', name: '乘勝追擊，擴大軍事生産', effects: { gdp: 20, debt: 18, cpi: 15, happy: 6 }, effectLabels: ['GDP +20','国债 +18','物价 +15','民满 +6'], knowledgeKey: 'export', remark: '短期收益大，但戰爭結束後會嚴重衰退' },
+      { letter: 'B', name: '平衡民用和軍事生産', effects: { gdp: 15, debt: 10, cpi: 8, happy: 10 }, effectLabels: ['GDP +15','国债 +10','物价 +8','民满 +10'], knowledgeKey: 'pub_invest', remark: '相對穩健，但競爭力不足' },
+      { letter: 'C', name: '抓住機會進行産業升級轉型', effects: { gdp: 12, debt: 12, cpi: 5, happy: 8 }, effectLabels: ['GDP +12','国债 +12','物价 +5','民满 +8'], knowledgeKey: 'qe', remark: '長期有利，短期收益被競爭對手搶走' },
+    ]
+  },
+  {
+    id: 'post_war_panic', icon: '📉', title: '戰後恐慌（1920年代初）',
+    body: '一战结束，日本经济从战争景气急速下落。大量军事订单取消，失业人口激增。糸价暴跌，农业萧条，城市爆发米骚动。',
+    impact: { gdp: -12, happy: -10, debt: 4 },
+    impactText: 'GDP -12，民众满意度 -10，国债压力 +4',
+    knowledgeKey: 'postwar_slump',
+    choices: [
+      { letter: 'A', name: '推行公共事業減輕失業', effects: { gdp: -2, debt: 18, happy: 8 }, effectLabels: ['GDP -2','国债 +18','民满 +8'], knowledgeKey: 'pub_invest', remark: '凱恩斯政策，緩解失業但加重債務' },
+      { letter: 'B', name: '緊縮政策，控制支出', effects: { gdp: -20, debt: -3, happy: -15 }, effectLabels: ['GDP -20','国债 -3','民满 -15'], knowledgeKey: 'tax_raise', remark: '財政得到控制，但經濟雪上加霜' },
+      { letter: 'C', name: '扶持出口産業，尋找新市場', effects: { gdp: -4, cpi: -6, debt: 3, happy: -5 }, effectLabels: ['GDP -4','物价 -6','国债 +3','民满 -5'], knowledgeKey: 'export', remark: '中期有望，但短期難以見效' },
+    ]
+  },
+  {
+    id: 'world_recession', icon: '😱', title: '世界恐慌（1929年大蕭條）',
+    body: '美国华尔街股市崩盘，世界经济陷入大萧条。日本农产品和工业品销售大幅下滑，失业人口骤增。政府陷入财政危机。',
+    impact: { gdp: -18, happy: -12, cpi: -6 },
+    impactText: 'GDP -18，民众满意度 -12，物价指数 -6',
+    knowledgeKey: 'great_depression',
+    choices: [
+      { letter: 'A', name: '金本位制解禁，實行管理通貨制度', effects: { gdp: -6, cpi: 4, fx: 8, happy: -2 }, effectLabels: ['GDP -6','物价 +4','汇率 +8','民满 -2'], knowledgeKey: 'market_rate_down', remark: '日本採取此策，利用円安優勢擴大出口' },
+      { letter: 'B', name: '保护农业，实行农业救济', effects: { gdp: -14, debt: 8, happy: 4 }, effectLabels: ['GDP -14','国债 +8','民满 +4'], knowledgeKey: 'tax_cut', remark: '稳定社会，但经济无法恢复' },
+      { letter: 'C', name: '推动产业保护政策和武装建设', effects: { gdp: -8, debt: 12, cpi: 3, happy: 6 }, effectLabels: ['GDP -8','国债 +12','物价 +3','民满 +6'], knowledgeKey: 'pub_invest', remark: '军事支出暂时稳定经济，但长期风险巨大' },
+    ]
+  },
+  {
+    id: 'postwar_recovery', icon: '🔨', title: '戰後民主化改革（1945-1947）',
+    body: '战争结束，占领军实施经济民主化：解散财阀、实施农地改革、制定劳动法。日本经济被迫进行根本性重组。',
+    impact: { gdp: -8, debt: -6, happy: 6 },
+    impactText: 'GDP -8，国债压力 -6，民众满意度 +6',
+    knowledgeKey: 'postwar_reforms',
+    choices: [
+      { letter: 'A', name: '全力支持改革，彻底打破旧秩序', effects: { gdp: -10, debt: -10, happy: 10 }, effectLabels: ['GDP -10','国债 -10','民满 +10'], knowledgeKey: 'tax_cut', remark: '民主化深入，但经济短期崩溃' },
+      { letter: 'B', name: '緩步推進改革，保護部分産業', effects: { gdp: -4, debt: -2, happy: 4 }, effectLabels: ['GDP -4','国债 -2','民满 +4'], knowledgeKey: 'pub_invest', remark: '平衡發展，但改革力度不足' },
+      { letter: 'C', name: '协助美国战略，军事经济优先', effects: { gdp: 2, debt: 4, happy: 2 }, effectLabels: ['GDP +2','国债 +4','民满 +2'], knowledgeKey: 'export', remark: '获得美国支援，经济开始恢复' },
+    ]
+  },
+  {
+    id: 'korean_war_boom', icon: '💣', title: '朝鮮戰爭景氣（1950-1952）',
+    body: '朝鲜战争爆发，美军急需战争物资。日本成为重要补给基地。军需工业订单爆炸式增长，经济迅速复苏。失业率大幅下降。',
+    impact: { gdp: 14, happy: 12, cpi: 6 },
+    impactText: 'GDP +14，民众满意度 +12，物价指数 +6',
+    knowledgeKey: 'korean_war_recovery',
+    choices: [
+      { letter: 'A', name: '最大化生产军需品，赚取外汇', effects: { gdp: 18, cpi: 10, debt: 4, happy: 14 }, effectLabels: ['GDP +18','物价 +10','国债 +4','民满 +14'], knowledgeKey: 'export', remark: '高度经济成长的起点，但通胀压力' },
+      { letter: 'B', name: '平衡軍需和民用生産', effects: { gdp: 12, cpi: 4, debt: 2, happy: 10 }, effectLabels: ['GDP +12','物价 +4','国债 +2','民满 +10'], knowledgeKey: 'pub_invest', remark: '相對穩健，持續發展' },
+      { letter: 'C', name: '謹慎應對，防止戰爭結束後的衝擊', effects: { gdp: 8, cpi: 2, debt: -2, happy: 6 }, effectLabels: ['GDP +8','物价 +2','国债 -2','民满 +6'], knowledgeKey: 'qe', remark: '長期考慮，但短期喪失機遇' },
+    ]
+  },
+  {
+    id: 'high_growth_era', icon: '🚀', title: '高度经济成长期开始（1950年代末）',
+    body: '朝鲜战争结束后，日本迎来高度经济成长期。国民所得倍增计划推出，大规模基础设施投资启动。东京奥运、新干线等象征性项目同步进行。',
+    impact: { gdp: 12, happy: 10, debt: 10 },
+    impactText: 'GDP +12，民众满意度 +10，国债压力 +10',
+    knowledgeKey: 'high_growth_era',
+    choices: [
+      { letter: 'A', name: '激進式投資，創造世界級基礎設施', effects: { gdp: 16, debt: 16, happy: 12, cpi: 8 }, effectLabels: ['GDP +16','国债 +16','民满 +12','物价 +8'], knowledgeKey: 'pub_invest', remark: '1960年代日本確實採取此策，成效卓著' },
+      { letter: 'B', name: '穩健增長，控制債務水平', effects: { gdp: 10, debt: 6, happy: 8, cpi: 3 }, effectLabels: ['GDP +10','国债 +6','民满 +8','物价 +3'], knowledgeKey: 'tax_cut', remark: '風險管理好，但增長潛力被限制' },
+      { letter: 'C', name: '優先私部門發展，減少政府干預', effects: { gdp: 11, debt: 4, happy: 6, cpi: 5 }, effectLabels: ['GDP +11','国债 +4','民满 +6','物价 +5'], knowledgeKey: 'qe', remark: '市場化路線，但基礎設施投資不足' },
+    ]
+  },
+  {
+    id: 'dollar_shock', icon: '💱', title: 'ドルショック（美元危機）1971年',
+    body: '美國尼克松總統宣布停止美元與黃金的兌換。國際貨幣體系開始瓦解。日本開始經歷円升值壓力。出口競爭力面臨威脅。',
+    impact: { fx: 14, gdp: -4, cpi: -3 },
+    impactText: '汇率稳定度 +14，GDP -4，物价指数 -3',
+    knowledgeKey: 'yen_revaluation',
+    choices: [
+      { letter: 'A', name: '实行日本列岛改造论，加大内需投资', effects: { gdp: 8, debt: 14, fx: -8, cpi: 10 }, effectLabels: ['GDP +8','国债 +14','汇率 -8','物价 +10'], knowledgeKey: 'pub_invest', remark: '短期稳住经济，但后续通胀严重' },
+      { letter: 'B', name: '應對円升，扶持出口産業', effects: { gdp: 2, fx: 8, debt: 2, cpi: -4 }, effectLabels: ['GDP +2','汇率 +8','国债 +2','物价 -4'], knowledgeKey: 'export', remark: '有效應對升值，但國內需求不足' },
+      { letter: 'C', name: '推動産業升級，強化技術優勢', effects: { gdp: 6, debt: 8, fx: 2, cpi: 2 }, effectLabels: ['GDP +6','国债 +8','汇率 +2','物价 +2'], knowledgeKey: 'qe', remark: '長期策略正確，但短期見效緩慢' },
+    ]
+  },
+  {
+    id: 'oil_crisis_1973', icon: '⛽', title: '第一次石油危機（1973年）',
+    body: '中東戰爭引發石油禁運。國際油價暴漲400%。日本作為進口國，能源成本激增。汽油、電費、生活成本全線上升。工業成本飆升。',
+    impact: { cpi: 18, gdp: -8, fx: -6 },
+    impactText: '物价指数 +18，GDP -8，汇率稳定度 -6',
+    knowledgeKey: 'oil_shock',
+    choices: [
+      { letter: 'A', name: '能源節約戰略，推動産業節能', effects: { cpi: 8, gdp: -4, happy: -2 }, effectLabels: ['物价 +8','GDP -4','民满 -2'], knowledgeKey: 'tax_cut', remark: '日本實際採取此策，産業升級成功' },
+      { letter: 'B', name: '能源補貼穩定物價', effects: { cpi: 6, debt: 14, gdp: -6, happy: 4 }, effectLabels: ['物价 +6','国债 +14','GDP -6','民满 +4'], knowledgeKey: 'pub_invest', remark: '短期穩定，但加重財政' },
+      { letter: 'C', name: '提高利率吸收流动性', effects: { cpi: 12, gdp: -12, happy: -6 }, effectLabels: ['物价 +12','GDP -12','民满 -6'], knowledgeKey: 'market_rate_up', remark: '抑制通胀，但经济衰退加深' },
+    ]
+  },
+  {
+    id: 'bubble_boom', icon: '💰', title: '泡沫经济顶峰（1985-1990年代初）',
+    body: '廣場協議後日本成為全球資金流入地。股市和房地産價格暴漲。銀行瘋狂放貸。企業和房產投機成風。日本GDP躍居世界第二。',
+    impact: { gdp: 16, cpi: 10, happy: 14, debt: 16 },
+    impactText: 'GDP +16，物价指数 +10，民众满意度 +14，国债压力 +16',
+    knowledgeKey: 'bubble_peak',
+    choices: [
+      { letter: 'A', name: '放任泡沫，享受繁榮', effects: { gdp: 18, happy: 16, debt: 22, cpi: 14 }, effectLabels: ['GDP +18','民满 +16','国债 +22','物价 +14'], knowledgeKey: 'qe', remark: '短期歡樂，但泡沫最終破裂' },
+      { letter: 'B', name: '提高利率冷卻過熱', effects: { gdp: 8, happy: 6, debt: 4, cpi: 6 }, effectLabels: ['GDP +8','民满 +6','国债 +4','物价 +6'], knowledgeKey: 'market_rate_up', remark: '及早制止過熱，但犧牲成長' },
+      { letter: 'C', name: '實施宏觀審慎政策，部分冷卻', effects: { gdp: 14, happy: 12, debt: 10, cpi: 8 }, effectLabels: ['GDP +14','民满 +12','国债 +10','物价 +8'], knowledgeKey: 'pub_invest', remark: '平衡政策，但無法完全避免後患' },
+    ]
+  },
+  {
+    id: 'bubble_collapse', icon: '💥', title: '泡沫破裂，失落十年開始（1990年代）',
+    body: '日本央行1989年开始激进加息。股市和房地产暴跌。银行积累大量不良债权。企业和家庭资产缩水。经济进入长期停滞。',
+    impact: { gdp: -14, happy: -12, debt: 18, cpi: -8 },
+    impactText: 'GDP -14，民众满意度 -12，国债压力 +18，物价指数 -8',
+    knowledgeKey: 'bubble_burst',
+    choices: [
+      { letter: 'A', name: '激進量化寬鬆和財政刺激', effects: { gdp: -2, debt: 28, happy: -4, cpi: 2 }, effectLabels: ['GDP -2','国债 +28','民满 -4','物价 +2'], knowledgeKey: 'qe', remark: '試圖救市，但效果有限' },
+      { letter: 'B', name: '結構改革，銀行破産清算', effects: { gdp: -18, debt: -8, happy: -14, cpi: -12 }, effectLabels: ['GDP -18','国债 -8','民满 -14','物价 -12'], knowledgeKey: 'tax_raise', remark: '短期陣痛劇烈，但長期可能更健康' },
+      { letter: 'C', name: '温和改革，漸進式重組', effects: { gdp: -10, debt: 12, happy: -8, cpi: -4 }, effectLabels: ['GDP -10','国债 +12','民满 -8','物价 -4'], knowledgeKey: 'deflation', remark: '平衡政策，但問題長期無法解決' },
+    ]
+  },
+  {
+    id: 'abenomics', icon: '🎯', title: '安倍經濟學（2012年後）',
+    body: '安倍首相推出「三支箭」政策：大膽的貨幣寬松、靈活的財政政策、結構改革。央行實施負利率政策。日本開始反擊通縮。',
+    impact: { gdp: 6, cpi: 6, happy: 8, debt: 12 },
+    impactText: 'GDP +6，物价指数 +6，民众满意度 +8，国债压力 +12',
+    knowledgeKey: 'abenomics_reform',
+    choices: [
+      { letter: 'A', name: '全力推行負利率和量化寬鬆', effects: { gdp: 10, cpi: 10, happy: 12, debt: 18 }, effectLabels: ['GDP +10','物价 +10','民满 +12','国债 +18'], knowledgeKey: 'market_rate_down', remark: '通胀目標有進展，但債務加重' },
+      { letter: 'B', name: '溫和寬松，強化結構改革', effects: { gdp: 5, cpi: 4, happy: 6, debt: 6 }, effectLabels: ['GDP +5','物价 +4','民满 +6','国债 +6'], knowledgeKey: 'tax_cut', remark: '相對平衡，但改革進度慢' },
+      { letter: 'C', name: '寬松和緊縮並行，提高消費税', effects: { gdp: 2, cpi: 2, happy: -2, debt: 4 }, effectLabels: ['GDP +2','物价 +2','民满 -2','国债 +4'], knowledgeKey: 'tax_raise', remark: '自相矛盾的政策，效果有限且民心受損' },
+    ]
+  },
 ];
 
 // Policy cards (shown in year 1 tutorial and as fallback)
@@ -477,7 +1529,7 @@ const POLICY_CARDS = [
 // ===== GAME STATE =====
 let state = {
   year: 1,
-  maxYears: 4,
+  maxYears: 6,
   difficulty: 'easy',
   stats: { gdp: 50, cpi: 50, fx: 50, debt: 30, happy: 60 },
   selectedChoice: null,
@@ -514,6 +1566,7 @@ function startGame() {
 
   renderYearDots();
   renderStats(null);
+  showTutorial(); // 显示新手教程
   loadRound();
 }
 
@@ -537,12 +1590,16 @@ function renderStats(deltas) {
     const clampedVal = Math.max(0, Math.min(100, val));
     
     let fillColor = '#58a6ff';
+    let warningEmoji = '✓';
     if (m.good === 'high') {
       fillColor = val >= 55 ? '#3fb950' : val >= 35 ? '#d29922' : '#f85149';
+      warningEmoji = val >= 55 ? '✓' : val >= 35 ? '⚠️' : '🚨';
     } else if (m.good === 'low') {
       fillColor = val <= 45 ? '#3fb950' : val <= 65 ? '#d29922' : '#f85149';
+      warningEmoji = val <= 45 ? '✓' : val <= 65 ? '⚠️' : '🚨';
     } else {
       fillColor = (val >= 35 && val <= 65) ? '#3fb950' : (val >= 20 && val <= 80) ? '#d29922' : '#f85149';
+      warningEmoji = (val >= 35 && val <= 65) ? '✓' : (val >= 20 && val <= 80) ? '⚠️' : '🚨';
     }
 
     let delta = deltas ? deltas[m.key] || 0 : 0;
@@ -556,6 +1613,7 @@ function renderStats(deltas) {
         <div class="stat-label">
           <span class="stat-name">${m.icon} ${m.name}</span>
           <span class="stat-val" style="color:${fillColor}">${clampedVal}</span>
+          <span class="stat-warn">${warningEmoji}</span>
         </div>
         <div class="stat-bar"><div class="stat-fill" style="width:${clampedVal}%;background:${fillColor}"></div></div>
         <div class="stat-delta">${deltaHtml}</div>
@@ -601,9 +1659,14 @@ function renderEvent() {
   // Build impact html
   let impactHtml = '<span class="impact-label">⚠️ 市场冲击：</span>' + ev.impactText;
   impactEl.innerHTML = impactHtml;
+}
 
-  // Show knowledge popup for event
-  if (ev.knowledgeKey) showKnowledge(ev.knowledgeKey);
+// 点击新闻卡显示知识点
+function showKnowledgeFromNews() {
+  const ev = state.currentEvent;
+  if (ev && ev.knowledgeKey) {
+    showKnowledge(ev.knowledgeKey);
+  }
 }
 
 function renderChoices(choices) {
@@ -616,16 +1679,17 @@ function renderChoices(choices) {
     }).join('');
 
     const k = c.knowledgeKey ? KNOWLEDGE[c.knowledgeKey] : null;
-    const kTag = k ? `<div class="knowledge-tag">📚 知识点：${k.name}</div>` : '';
 
     grid.innerHTML += `
       <div class="choice-card" data-idx="${i}" onclick="selectChoice(this, ${i})">
         <div class="choice-top">
-          <span class="choice-letter">${c.letter}</span>
-          <span class="choice-name">${c.name}</span>
+          <div class="choice-name-area">
+            <span class="choice-letter">${c.letter}</span>
+            <span class="choice-name">${c.name}</span>
+          </div>
+          ${k ? `<span class="knowledge-info-icon" onclick="event.stopPropagation(); showKnowledgePopup(${i})" title="点击查看知识点">ℹ️</span>` : ''}
         </div>
         <div class="choice-effects">${effectTags}</div>
-        ${kTag}
       </div>
     `;
   });
@@ -636,10 +1700,8 @@ function selectChoice(el, idx) {
   el.classList.add('selected');
   state.selectedChoice = idx;
   document.getElementById('confirm-btn').disabled = false;
-
-  // Show knowledge popup for this choice
-  const choice = state.currentEvent.choices[idx];
-  if (choice.knowledgeKey) showKnowledge(choice.knowledgeKey);
+  
+  // 不自动弹出，让用户主动点击 [ℹ️]
 }
 
 function confirmChoice() {
@@ -656,9 +1718,9 @@ function confirmChoice() {
     choiceDeltas[k] = delta;
   });
 
-  // Natural reversion toward 50
+  // Natural reversion toward 50 (stronger for 12-round game)
   Object.keys(state.stats).forEach(k => {
-    const reversion = (50 - state.stats[k]) * 0.08;
+    const reversion = (50 - state.stats[k]) * 0.12;
     state.stats[k] = Math.max(0, Math.min(100, state.stats[k] + reversion));
     if (!choiceDeltas[k]) choiceDeltas[k] = reversion;
   });
@@ -686,20 +1748,104 @@ function confirmChoice() {
   }
 }
 
+function showKnowledgePopup(choiceIdx) {
+  const choice = state.currentEvent.choices[choiceIdx];
+  if (!choice || !choice.knowledgeKey) return;
+  
+  const k = KNOWLEDGE[choice.knowledgeKey];
+  if (!k) return;
+  
+  document.getElementById('kp-body').textContent = k.body;
+  document.getElementById('kp-jp').textContent = `📖 EJU键词：${k.jp}`;
+  const kpTitle = document.querySelector('.kp-title');
+  if (kpTitle) kpTitle.textContent = k.name;
+  
+  const popup = document.getElementById('kpopup');
+  popup.classList.add('show');
+  
+  clearTimeout(popup._timer);
+  popup._timer = setTimeout(() => {
+    popup.classList.remove('show');
+  }, 6000);
+}
+
 function showKnowledge(key) {
   const k = KNOWLEDGE[key];
   if (!k) return;
   document.getElementById('kp-body').textContent = k.body;
   document.getElementById('kp-jp').textContent = `📖 EJU键词：${k.jp}`;
   const popup = document.getElementById('kpopup');
+  const kpTitle = popup.querySelector('.kp-title');
+  if (kpTitle) kpTitle.textContent = k.name;
+  
   popup.classList.add('show');
   clearTimeout(popup._timer);
-  popup._timer = setTimeout(() => popup.classList.remove('show'), 6000);
+  
+  const closeDelay = 6000;
+  popup._timer = setTimeout(() => {
+    popup.classList.remove('show');
+  }, closeDelay);
 }
 
 function closeKnowledge() {
-  document.getElementById('kpopup').classList.remove('show');
+  const popup = document.getElementById('kpopup');
+  if (popup) popup.classList.remove('show');
 }
+
+// 点击外部关闭知识点弹窗
+document.addEventListener('click', function(e) {
+  const popup = document.getElementById('kpopup');
+  if (popup && popup.classList.contains('show')) {
+    if (!popup.contains(e.target) && !e.target.classList.contains('knowledge-info-icon')) {
+      closeKnowledge();
+    }
+  }
+});
+
+// 显示新手教程
+function showTutorial() {
+  const tutBody = document.getElementById('tut-body');
+  tutBody.innerHTML = `
+    <p>🎮 <strong>欢迎成为首相！</strong>你有 12 年时间执政一个小岛国。面对各种经济事件，做出明智的政策选择。</p>
+    
+    <h3>📊 5 个关键指标</h3>
+    <div class="stat-item"><span class="stat-icon">📈</span><strong>GDP成長率</strong> - 经济增速。过低会被迫下台！</div>
+    <div class="stat-item"><span class="stat-icon">📊</span><strong>物価指数</strong> - 通货膨胀水平。过高或过低都很危险。</div>
+    <div class="stat-item"><span class="stat-icon">💱</span><strong>汇率稳定度</strong> - 本币强弱。影响进出口竞争力。</div>
+    <div class="stat-item"><span class="stat-icon">📋</span><strong>国债压力</strong> - 财政健康度。超过 80 会触发信用评级下调！</div>
+    <div class="stat-item"><span class="stat-icon">😊</span><strong>民众满意度</strong> - 你的"生命值"。低于 20 直接下台。</div>
+    
+    <h3>🎯 获胜条件</h3>
+    <p>6 年后，5 个指标都在合理范围内：</p>
+    <p style="font-size:0.9em;color:#00c8ff;">GDP 30-80 · 物价 30-70 · 汇率 30-70 · 国债 < 80 · 民满 ≥ 20</p>
+    
+    <h3>💡 提示</h3>
+    <p>✓ 点击<strong>年度新闻简报</strong>查看该事件的经济学知识点</p>
+    <p>✓ 每个政策选择都有<strong>不同的经济影响</strong> — 权衡利弊很重要</p>
+    <p>✓ 高难度下，政策效果会更强，挑战更大</p>
+  `;
+  const tutorial = document.getElementById('tutorial');
+  const overlay = document.getElementById('overlay');
+  if (tutorial) tutorial.classList.add('show');
+  if (overlay) overlay.classList.add('show');
+}
+
+function closeTutorial() {
+  const tutorial = document.getElementById('tutorial');
+  const overlay = document.getElementById('overlay');
+  if (tutorial) tutorial.classList.remove('show');
+  if (overlay) overlay.classList.remove('show');
+}
+
+// 点击外部关闭知识点弹窗
+document.addEventListener('click', function(e) {
+  const popup = document.getElementById('kpopup');
+  if (popup && popup.classList.contains('show')) {
+    if (!popup.contains(e.target) && !e.target.classList.contains('knowledge-info-icon')) {
+      closeKnowledge();
+    }
+  }
+});
 
 function showResult(reason) {
   const s = state.stats;
