@@ -411,6 +411,15 @@
     50% { opacity: 0.6; }
   }
 
+  /* ===== SVG 图标样式 ===== */
+  .info-icon-svg,
+  .book-icon-svg {
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
   /* ===== 知识点按钮 - 统一样式 + 自定义光标 ===== */
   .knowledge-info-icon,
   .news-knowledge-btn {
@@ -427,10 +436,10 @@
     background: rgba(88,166,255,0.2);
     border: 1.5px solid rgba(88,166,255,0.4);
     border-radius: 50%;
-    font-size: 1.1em;
     animation: pulse 2s infinite;
     transition: all 0.3s ease;
     flex-shrink: 0;
+    padding: 0;
   }
 
   .knowledge-info-icon:hover {
@@ -452,7 +461,11 @@
     color: #58a6ff;
     border-radius: 6px;
     padding: 4px 10px;
-    font-size: 0.8em;
+    font-size: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
     transition: all 0.3s ease;
     white-space: nowrap;
     flex-shrink: 0;
@@ -1106,7 +1119,7 @@
         <div class="news-icon" id="news-icon">📰</div>
         <div class="news-title" id="news-title">年度新闻简报</div>
       </div>
-      <button class="news-knowledge-btn" id="news-knowledge-btn" onclick="event.stopPropagation(); showKnowledgeFromNews()" title="查看这条新闻的背景知识">📖</button>
+      <button class="news-knowledge-btn" id="news-knowledge-btn" onclick="event.stopPropagation(); showKnowledgeFromNews()" title="查看这条新闻的背景知识"><svg class="book-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bookGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#58a6ff;stop-opacity:1" /><stop offset="100%" style="stop-color:#0084ff;stop-opacity:1" /></linearGradient></defs><path d="M 4 2 L 12 2 L 12 22 L 4 22 Q 2 22 2 20 L 2 4 Q 2 2 4 2 Z" fill="url(#bookGrad)" opacity="0.9"/><path d="M 20 2 L 12 2 L 12 22 L 20 22 Q 22 22 22 20 L 22 4 Q 22 2 20 2 Z" fill="url(#bookGrad)" opacity="0.6"/><line x1="12" y1="2" x2="12" y2="22" stroke="#58a6ff" stroke-width="1" opacity="0.5"/></svg></button>
     </div>
     <div class="news-body" id="news-body"></div>
     <div class="news-impact" id="news-impact"></div>
@@ -1677,7 +1690,7 @@ function renderChoices(choices) {
             <span class="choice-letter">${c.letter}</span>
             <span class="choice-name">${c.name}</span>
           </div>
-          ${k ? `<span class="knowledge-info-icon" onclick="event.stopPropagation(); showKnowledgePopup(${i})" title="点击查看知识点">ℹ️</span>` : ''}
+          ${k ? `<span class="knowledge-info-icon" onclick="event.stopPropagation(); showKnowledgePopup(${i})" title="点击查看知识点"><svg class="info-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><text x="12" y="16" text-anchor="middle" font-size="14" font-weight="bold" fill="currentColor" font-family="serif">i</text></svg></span>` : ''}
         </div>
         <div class="choice-effects">${effectTags}</div>
       </div>
